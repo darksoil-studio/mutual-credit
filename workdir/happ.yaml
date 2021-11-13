@@ -1,0 +1,17 @@
+---
+manifest_version: "1"
+name: mutual-credit-mixin
+description: ~
+roles:
+
+  - id: mutual-credit
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "../dna/workdir/mutual-credit.dna"
+      properties: ~
+      uuid: ~
+      version: ~
+      clone_limit: 0
+

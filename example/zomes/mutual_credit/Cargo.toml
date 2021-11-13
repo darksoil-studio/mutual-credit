@@ -1,0 +1,14 @@
+[package]
+edition = "2018"
+name = "mutual_credit"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "mutual_credit"
+
+[dependencies]
+derive_more = "0"
+serde = "1"
+
+hc_mixin_mutual_credit = {path = "../../../mixin"}
