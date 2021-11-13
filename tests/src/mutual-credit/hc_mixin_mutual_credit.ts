@@ -20,7 +20,7 @@ export default (orchestrator: Orchestrator<any>) =>
     const bob = bob_happ.cells.find(cell => cell.cellRole.includes('/mutual-credit.dna')) as Cell;
 
     let offers = await alice.call(
-      "transactor",
+      "mutual-credit",
       "query_my_pending_offers",
       null
     );
