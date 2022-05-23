@@ -5,5 +5,5 @@ export * from './elements/transaction-list';
 export * from './elements/my-offers';
 export * from './elements/my-balance';
 export * from './elements/transaction-list';
-export * from './public-transactor.service';
-export * from './transactor.store';
+export * from './mutual-credit-service';
+export * from './mutual-credit-store';

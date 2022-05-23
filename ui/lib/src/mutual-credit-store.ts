@@ -1,34 +1,31 @@
-import { Dictionary } from '@compository/lib';
-import { HoloHashed, serializeHash } from '@holochain-open-dev/core-types';
-import { ProfilesStore } from '@holochain-open-dev/profiles/profiles.store';
-import {
-  observable,
-  action,
-  runInAction,
-  computed,
-  makeObservable,
-} from 'mobx';
-import { PublicTransactorService } from './public-transactor.service';
-import { Multiparty, Offer, Transaction } from './types';
+import { EntryHashB64, serializeHash } from '@holochain-open-dev/core-types';
+import { CellClient } from '@holochain-open-dev/cell-client';
+import { ProfilesStore } from '@holochain-open-dev/profiles';
+import { writable, Writable } from 'svelte/store';
 
-export class TransactorStore {
-  @observable
-  public offers: Dictionary<Offer> = {};
-  @observable
-  public transactions: Dictionary<Transaction> = {};
+import { MutualCreditService } from './mutual-credit-service';
+import { Offer, Transaction } from './types';
+
+export class MutualCreditStore {
+  private _offers: Writable<Record<EntryHashB64, Offer>> = writable({});
+
+  private _transactions: Writable<Record<EntryHashB64, Transaction>> = writable(
+    {}
+  );
 
   constructor(
-    protected transactorService: PublicTransactorService,
+    protected cellClient: CellClient,
     public profilesStore: ProfilesStore
-  ) {
-    makeObservable(this);
-  }
+  ) {}
 
   get myAgentPubKey() {
-    return serializeHash(this.transactorService.cellId[1]);
+    return serializeHash(this.cellClient.cellId[1]);
   }
 
-  @computed
+  fetchMyPendingOffers() {
+    
+  }
+
   get myPendingOffers(): HoloHashed<Offer>[] {
     return Object.entries(this.offers)
       .filter(

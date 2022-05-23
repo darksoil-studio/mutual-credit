@@ -1,6 +1,6 @@
 ---
 manifest_version: "1"
-name: mutual-credit-mixin
+name: mutual-credit
 description: ~
 roles:
 
@@ -9,7 +9,7 @@ roles:
       strategy: create
       deferred: false
     dna:
-      bundled: "../example/workdir/mutual-credit.dna"
+      bundled: "./mutual-credit.dna"
       properties: ~
       uuid: ~
       version: ~

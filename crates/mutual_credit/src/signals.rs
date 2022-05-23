@@ -1,4 +1,4 @@
-use crate::{offer::Offer, transaction::Transaction, utils::Hashed};
+use crate::{transaction_intent::Offer, transaction::Transaction, utils::Hashed};
 use hdk::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -1,1 +1,1 @@
-extern crate hc_mixin_mutual_credit;
+extern crate hc_zome_mutual_credit;

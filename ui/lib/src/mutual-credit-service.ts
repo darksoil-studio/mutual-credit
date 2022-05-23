@@ -1,17 +1,16 @@
-import { HoloHashed, timestampToMillis } from '@holochain-open-dev/core-types';
-import { AppWebsocket, CellId } from '@holochain/conductor-api';
+import { CellClient } from '@holochain-open-dev/cell-client';
+import {
+  EntryHashB64,
+  timestampToMillis,
+} from '@holochain-open-dev/core-types';
 import { Offer, Transaction } from './types';
 
-export class PublicTransactorService {
+export class MutualCreditService {
   constructor(
-    public appWebsocket: AppWebsocket,
-    public cellId: CellId,
-    public zomeName = 'transactor'
+    protected cellClient: CellClient,
+    public zomeName = 'mutual_credit'
   ) {}
 
-  async getMyPublicKey(): Promise<string> {
-    return this.callZome('who_am_i', null);
-  }
 
   async getAgentBalance(agentPubKey: string): Promise<number> {
     return this.callZome('get_balance_for_agent', agentPubKey);
@@ -19,7 +18,7 @@ export class PublicTransactorService {
 
   async getAgentTransactions(
     agentPubKey: string
-  ): Promise<Array<HoloHashed<Transaction>>> {
+  ): Promise<Record<EntryHashB64, Transaction>> {
     const transactions = await this.callZome(
       'get_transactions_for_agent',
       agentPubKey
@@ -33,7 +32,7 @@ export class PublicTransactorService {
     }));
   }
 
-  async queryMyPendingOffers(): Promise<Array<HoloHashed<Offer>>> {
+  async queryMyPendingOffers(): Promise<Record<EntryHashB64, Transaction>> {
     return this.callZome('query_my_pending_offers', null);
   }
 
@@ -61,13 +60,6 @@ export class PublicTransactorService {
   } */
 
   private callZome(fn_name: string, payload: any) {
-    return this.appWebsocket.callZome({
-      cap: null as any,
-      cell_id: this.cellId,
-      zome_name: this.zomeName,
-      fn_name,
-      payload,
-      provenance: this.cellId[1],
-    });
+    return this.cellClient.callZome(this.zomeName, fn_name, payload);
   }
 }

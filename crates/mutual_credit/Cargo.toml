@@ -1,16 +1,16 @@
 [package]
 edition = "2018"
-name = "hc_mixin_mutual_credit"
+name = "hc_zome_mutual_credit"
 version = "0.0.1"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "hc_mixin_mutual_credit"
+name = "hc_zome_mutual_credit"
 
 [dependencies]
 serde = "1"
 derive_more = "0"
 chrono = {version = "0.4", features = ["serde"]}
 
-hdk = "0.0.115"
-holo_hash = { version = "0.0.12", features = ["encoding"] }
+hdk = { version = "0.0.127", features = ["encoding"] }
+holo_hash = { version = "*", features = ["serialization"] }

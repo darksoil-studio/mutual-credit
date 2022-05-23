@@ -1,9 +1,7 @@
-export interface Multiparty {
+export interface Transaction {
   spender_pub_key: string;
   recipient_pub_key: string;
-}
 
-export interface Transaction extends Multiparty {
   amount: number;
   timestamp: number;
   offer_hash: string;
@@ -16,7 +14,10 @@ export type OfferState =
   | 'Completed'
   | 'Approved';
 
-export interface Offer extends Multiparty {
+export interface Offer  {
+  spender_pub_key: string;
+  recipient_pub_key: string;
+
   amount: number;
 
   state: OfferState;

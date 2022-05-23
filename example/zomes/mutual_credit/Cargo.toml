@@ -11,4 +11,4 @@ name = "mutual_credit"
 derive_more = "0"
 serde = "1"
 
-hc_mixin_mutual_credit = {path = "../../../mixin"}
+hc_zome_mutual_credit = {path = "../../../crates/mutual_credit"}

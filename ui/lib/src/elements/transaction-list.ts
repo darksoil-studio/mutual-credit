@@ -1,5 +1,6 @@
 import { LitElement, html, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
+import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 
 import {
   Icon,
@@ -11,9 +12,8 @@ import {
 import { sharedStyles } from './utils/shared-styles';
 import { dateString } from '../utils';
 import { TransactorStore } from '../transactor.store';
-import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 
-export abstract class TransactionList extends ScopedElementsMixin(LitElement) {
+export class TransactionList extends ScopedElementsMixin(LitElement) {
   /** Public attributes */
 
   /** Private properties */

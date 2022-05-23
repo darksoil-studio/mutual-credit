@@ -1,8 +1,7 @@
 [workspace]
 members = [
-  "example/zomes/mutual_credit",
-  "example/zomes/profiles",
-  "mixin",
+  "example/zomes/*",
+  "crates/*",
 ]
 resolver = "2"
 

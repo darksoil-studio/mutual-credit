@@ -4,4 +4,4 @@ name: mutual-credit-mixin
 ui:
   bundled: "../ui/dist.zip"
 happ_manifest:
-  bundled: "./mutual-credit-mixin.happ"
+  bundled: "./mutual-credit.happ"
