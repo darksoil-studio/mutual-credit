@@ -1,15 +1,15 @@
 ---
 manifest_version: "1"
-name: mutual-credit
+name: mutual_credit
 description: ~
 roles:
 
-  - id: mutual-credit
+  - id: mutual_credit
     provisioning:
       strategy: create
       deferred: false
     dna:
-      bundled: "./mutual-credit.dna"
+      bundled: "./mutual_credit.dna"
       properties: ~
       uuid: ~
       version: ~

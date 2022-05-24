@@ -1,9 +1,8 @@
 use hdk::prelude::*;
 
-mod transaction_intent;
+mod intent;
 mod signals;
 mod transaction;
-mod utils;
 
 pub fn err(reason: &str) -> WasmError {
     WasmError::Guest(String::from(reason))
@@ -11,7 +10,7 @@ pub fn err(reason: &str) -> WasmError {
 
 entry_defs![
     Path::entry_def(),
-    transaction_intent::Offer::entry_def(),
+    intent::Intent::entry_def(),
     transaction::entry::Transaction::entry_def()
 ];
 

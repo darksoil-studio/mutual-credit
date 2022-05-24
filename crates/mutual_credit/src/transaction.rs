@@ -3,32 +3,34 @@ use std::collections::BTreeMap;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
+use self::common::get_transactions_activity;
 use self::entry::Transaction;
 
 mod initiator;
 mod responder;
+mod validation;
+mod common;
 pub mod entry;
 
 
 pub fn attempt_create_transaction_for_intent(
-    transaction_intent_header_hash: HeaderHashB64,
+    intent_element: Element,
+    counterparty_chain_top: HeaderHashB64,
 ) -> ExternResult<(HeaderHashB64, Transaction)> {
-    initiator::attempt_create_transaction(transaction_intent_header_hash)
-
-    // Create link from offer to transaction
+    initiator::attempt_create_transaction(intent_element, counterparty_chain_top)
 }
 
 #[hdk_extern]
 pub fn get_transactions_for_agent(
     agent_pub_key: AgentPubKeyB64,
 ) -> ExternResult<BTreeMap<HeaderHashB64, Transaction>> {
-    let activity = get_transactions_activity(agent_pub_key)?;
+    let activity = get_transactions_activity(agent_pub_key.into())?;
 
     let transactions = activity
         .valid_activity
         .into_iter()
-        .map(|(seq, header_hash)| {
-            let element = get(header_hash, GetOptions::default())?
+        .map(|(_, header_hash)| {
+            let element = get(header_hash.clone(), GetOptions::default())?
                 .ok_or(WasmError::Guest(String::from("Couldn't get transaction")))?;
 
             let entry = element
@@ -58,7 +60,7 @@ pub fn entry_to_transaction(entry: Entry) -> ExternResult<Transaction> {
 }
 
 pub fn get_latest_transaction_for(
-    agent_pub_key: AgentPubKeyB64,
+    agent_pub_key: AgentPubKey,
 ) -> ExternResult<Option<(HeaderHashB64, Transaction)>> {
     let activity = get_transactions_activity(agent_pub_key)?;
 
@@ -81,12 +83,4 @@ pub fn get_latest_transaction_for(
             Ok(Some((hash_b64, transaction)))
         }
     }
-}
-
-fn get_transactions_activity(agent_pub_key: AgentPubKeyB64) -> ExternResult<AgentActivity> {
-    let filter = ChainQueryFilter::new().entry_type(Transaction::entry_type()?);
-
-    let activity = get_agent_activity(agent_pub_key.into(), filter, ActivityRequest::Full)?;
-
-    Ok(activity)
 }

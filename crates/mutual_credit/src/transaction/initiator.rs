@@ -1,47 +1,102 @@
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-use crate::transaction_intent::{TransactionIntent};
+use crate::intent::Intent;
 
-use super::{get_latest_transaction_for, Transaction};
+use super::{
+    common::create_transaction, get_latest_transaction_for, responder::IsIntentStillValid,
+    validation::validate_preflight_response, Transaction,
+};
 
 pub fn attempt_create_transaction(
-    transaction_intent_header_hash: HeaderHashB64,
+    intent_element: Element,
+    counterparty_chain_top: HeaderHashB64,
 ) -> ExternResult<(HeaderHashB64, Transaction)> {
-    let transaction = build_transaction(transaction_intent_header_hash)?;
+    let counterparty = intent_element.header().author().clone();
 
-    let preflight_request = build_preflight_request(transaction)?;
+    let response = call_remote(
+        counterparty.clone(),
+        zome_info()?.name,
+        "is_intent_is_still_valid".into(),
+        None,
+        IsIntentStillValid {
+            intent_hash: intent_element.header_address().clone().into(),
+            chain_top: counterparty_chain_top.clone(),
+        },
+    )?;
+
+    let _is_valid_result: () = match response {
+        ZomeCallResponse::Ok(result) => result.decode()?,
+        _ => Err(WasmError::Guest(String::from(
+            "Error with fn is_intent_still_valid",
+        ))),
+    }?;
+
+    let transaction = build_transaction(intent_element)?;
+    let preflight_request = build_preflight_request(transaction.clone())?;
+
+    let my_response = match accept_countersigning_preflight_request(preflight_request)? {
+        PreflightRequestAcceptance::Accepted(response) => Ok(response),
+        _ => Err(WasmError::Guest(String::from(
+            "Couldn't lock our own chain",
+        ))),
+    }?;
+
+    let response = call_remote(
+        counterparty.clone(),
+        zome_info()?.name,
+        "request_create_transaction".into(),
+        None,
+        my_response.clone(),
+    )?;
+
+    let counterparty_response: PreflightResponse = match response {
+        ZomeCallResponse::Ok(result) => result.decode()?,
+        _ => Err(WasmError::Guest(String::from(
+            "Error with fn request_create_transaction",
+        ))),
+    }?;
+
+    let chain_top = counterparty_response.agent_state().chain_top();
+
+    if !HeaderHash::from(counterparty_chain_top).eq(chain_top) {
+        return Err(WasmError::Guest(String::from(
+            "Counterparty chain moved in the process of finalizing the transaction",
+        )));
+    }
+
+    validate_preflight_response(counterparty_response.clone())?;
+
+    let header_hash = create_transaction(
+        transaction.clone(),
+        vec![my_response, counterparty_response],
+    )?;
+
+    Ok((header_hash.into(), transaction))
 }
 
-fn build_transaction(transaction_intent_header_hash: HeaderHashB64) -> ExternResult<Transaction> {
-    let transaction_intent_element = get(
-        HeaderHash::from(transaction_intent_header_hash.clone()),
-        GetOptions::default(),
-    )?
-    .ok_or(WasmError::Guest(String::from(
-        "Couldn't get transaction_intent",
-    )))?;
+fn build_transaction(intent_element: Element) -> ExternResult<Transaction> {
+    let transaction_intent: Intent =
+        intent_element
+            .entry()
+            .to_app_option()?
+            .ok_or(WasmError::Guest(String::from(
+                "Malformed transaction_intent",
+            )))?;
 
-    let transaction_intent: TransactionIntent = transaction_intent_element
-        .entry()
-        .to_app_option()?
-        .ok_or(WasmError::Guest(String::from(
-            "Malformed transaction_intent",
-        )))?;
+    let spender = transaction_intent.spender_pub_key.clone();
+    let recipient = transaction_intent.recipient_pub_key.clone();
 
-    let spender = transaction_intent.spender_pub_key;
-    let recipient = transaction_intent.recipient_pub_key;
-
-    let spender_latest_transaction = get_latest_transaction_for(spender)?;
-    let recipient_latest_transaction = get_latest_transaction_for(recipient)?;
+    let spender_latest_transaction = get_latest_transaction_for(spender.into())?;
+    let recipient_latest_transaction = get_latest_transaction_for(recipient.into())?;
 
     let transaction = Transaction::from_previous_transactions(
-        transaction_intent.spender_pub_key,
-        transaction_intent.recipient_pub_key,
+        transaction_intent.spender_pub_key.into(),
+        transaction_intent.recipient_pub_key.into(),
         spender_latest_transaction,
         recipient_latest_transaction,
         transaction_intent.amount,
-        transaction_intent_header_hash,
+        intent_element.header_address().clone().into(),
     )?;
     Ok(transaction)
 }

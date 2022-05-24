@@ -15,7 +15,7 @@ pub struct TransactionParty {
 pub struct Transaction {
     pub spender: TransactionParty,
     pub recipient: TransactionParty,
-    pub transaction_intent_header_hash: HeaderHashB64,
+    pub intent_hash: HeaderHashB64,
     pub amount: f64,
 }
 
@@ -29,32 +29,32 @@ impl Transaction {
     }
 
     pub fn from_previous_transactions(
-        spender: AgentPubKeyB64,
-        recipient: AgentPubKeyB64,
+        spender: AgentPubKey,
+        recipient: AgentPubKey,
         previous_spender_transaction: Option<(HeaderHashB64, Transaction)>,
         previous_recipient_transaction: Option<(HeaderHashB64, Transaction)>,
         amount: f64,
         transaction_intent_header_hash: HeaderHashB64,
     ) -> ExternResult<Transaction> {
         let previous_spender_balance = balance_from_previous_transaction(
-            spender,
-            previous_spender_transaction.map(|(_, t)| t),
+            spender.clone(),
+            previous_spender_transaction.clone().map(|(_, t)| t),
         )?;
         let previous_recipient_balance = balance_from_previous_transaction(
-            recipient,
-            previous_recipient_transaction.map(|(_, t)| t),
+            recipient.clone(),
+            previous_recipient_transaction.clone().map(|(_, t)| t),
         )?;
 
         let resulting_spender_balance = previous_spender_balance - amount;
         let resulting_recipient_balance = previous_recipient_balance - amount;
 
         let spender = TransactionParty {
-            agent_pub_key: spender,
+            agent_pub_key: spender.into(),
             previous_transaction_hash: previous_spender_transaction.map(|(h, _)| h),
             resulting_balance: resulting_spender_balance,
         };
         let recipient = TransactionParty {
-            agent_pub_key: recipient,
+            agent_pub_key: recipient.into(),
             previous_transaction_hash: previous_recipient_transaction.map(|(h, _)| h),
             resulting_balance: resulting_recipient_balance,
         };
@@ -63,17 +63,17 @@ impl Transaction {
             spender,
             recipient,
             amount,
-            transaction_intent_header_hash,
+            intent_hash: transaction_intent_header_hash,
         };
 
         Ok(transaction)
     }
 
-    fn get_party(&self, agent_pub_key: &AgentPubKeyB64) -> ExternResult<TransactionParty> {
-        if self.spender.agent_pub_key.eq(agent_pub_key) {
-            Ok(self.spender)
-        } else if self.recipient.agent_pub_key.eq(agent_pub_key) {
-            Ok(self.recipient)
+    pub fn get_party(&self, agent_pub_key: &AgentPubKey) -> ExternResult<TransactionParty> {
+        if AgentPubKey::from(self.spender.agent_pub_key.clone()).eq(agent_pub_key) {
+            Ok(self.spender.clone())
+        } else if AgentPubKey::from(self.recipient.agent_pub_key.clone()).eq(agent_pub_key) {
+            Ok(self.recipient.clone())
         } else {
             Err(WasmError::Guest(String::from(
                 "This agent did not participate in the transaction",
@@ -83,7 +83,7 @@ impl Transaction {
 }
 
 fn balance_from_previous_transaction(
-    for_agent: AgentPubKeyB64,
+    for_agent: AgentPubKey,
     previous_transaction: Option<Transaction>,
 ) -> ExternResult<f64> {
     match previous_transaction {
