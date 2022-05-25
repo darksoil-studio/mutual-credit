@@ -10,7 +10,7 @@ async fn simple_transaction() {
     // Use prebuilt DNA file
     let dna_path = std::env::current_dir()
         .unwrap()
-        .join("../../example/workdir/lets.dna");
+        .join("../../../workdir/lets.dna");
     let dna = SweetDnaFile::from_bundle(&dna_path).await.unwrap();
 
     // Set up conductors

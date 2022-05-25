@@ -11,8 +11,8 @@ name = "lets"
 derive_more = "0"
 serde = "1"
 
-hc_lib_transaction_requests = {path = "../../../../../libs/transaction_requests/zome"}
-hc_lib_transactions = {path = "../../../../../libs/transactions/zome"}
+hc_lib_transaction_requests = {path = "../../../../libs/transaction_requests/zome"}
+hc_lib_transactions = {path = "../../../../libs/transactions/zome"}
 hdk = {version = "0.0.127", features = ["encoding"]}
 
 [dev-dependencies]

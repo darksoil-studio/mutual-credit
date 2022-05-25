@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "apps/*/we-game/zomes/*",
+  "apps/*/zomes/*",
   "libs/*/zome",
 ]
 resolver = "2"
