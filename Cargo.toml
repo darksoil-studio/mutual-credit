@@ -1,12 +1,18 @@
 [workspace]
 members = [
-  "example/zomes/*",
-  "crates/*",
+  "apps/*/we-game/zomes/*",
+  "libs/*/zome",
 ]
 resolver = "2"
 
 [profile.dev]
 opt-level = "z"
+incremental = true
 
 [profile.release]
 opt-level = "z"
+incremental = true
+
+[profile.test]
+opt-level = "z"
+incremental = true

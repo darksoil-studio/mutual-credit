@@ -1,0 +1,17 @@
+---
+manifest_version: "1"
+name: lets
+description: ~
+roles:
+
+  - id: lets
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "./lets.dna"
+      properties: ~
+      uuid: ~
+      version: ~
+      clone_limit: 0
+

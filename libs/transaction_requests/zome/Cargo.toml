@@ -1,0 +1,16 @@
+[package]
+edition = "2018"
+name = "hc_lib_transaction_requests"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "hc_lib_transaction_requests"
+
+[dependencies]
+chrono = {version = "0.4", features = ["serde"]}
+derive_more = "0"
+serde = "1"
+
+hc_lib_transactions = {path = "../../transactions/zome"}
+hdk = {version = "0.0.127", features = ["encoding"]}
