@@ -44,7 +44,7 @@ pub fn request_create_transaction(
 
     let _header_hash = create_transaction(
         transaction.clone(),
-        vec![my_response.clone(), preflight_response],
+        vec![preflight_response, my_response.clone()],
     )?;
 
     Ok(my_response)

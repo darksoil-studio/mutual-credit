@@ -20,7 +20,7 @@ pub fn init() -> ExternResult<()> {
     create_cap_grant(grant)?;
 
     let mut functions = GrantedFunctions::new();
-    functions.insert((zome_info()?.name, "is_intent_still_valid".into()));
+    functions.insert((zome_info()?.name, "pre_transaction_check".into()));
 
     let grant = ZomeCallCapGrant {
         access: CapAccess::Unrestricted,

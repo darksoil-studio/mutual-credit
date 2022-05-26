@@ -1,8 +1,13 @@
-use hc_lib_transactions::Transaction;
+use std::collections::BTreeMap;
+
+use hc_lib_transactions::{query_my_transactions, Transaction};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-use crate::{TransactionRequest, TransactionRequestType, countersigning::initiator::attempt_create_transaction};
+use crate::{
+    countersigning::initiator::attempt_create_transaction, TransactionRequest,
+    TransactionRequestType,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -64,31 +69,157 @@ pub fn accept_transaction_request(
     )?
     .ok_or(WasmError::Guest(String::from("Couldn't get intent")))?;
 
-    let counterparty_chain_top =
-        get_chain_top(transaction_request_element.header().author().clone())?;
+    let transaction_request: TransactionRequest = transaction_request_element
+        .entry()
+        .to_app_option()?
+        .ok_or(WasmError::Guest(String::from(
+            "Malformed transaction request",
+        )))?;
+    let counterparty = transaction_request.get_counterparty()?;
+
+    let counterparty_chain_top = get_chain_top(counterparty.into())?;
 
     let result = attempt_create_transaction(
         transaction_request_element.clone(),
         counterparty_chain_top.into(),
     )?;
 
-    create_link(
-        transaction_request_element
-            .header_address()
-            .clone()
-            .retype(hash_type::Entry),
-        HeaderHash::from(result.0.clone()).retype(hash_type::Entry),
-        HdkLinkType::Any,
-        (),
-    )?;
-
     Ok(result)
 }
 
-fn get_chain_top(agent_pub_key: AgentPubKey) -> ExternResult<HeaderHash> {
-    let filter = ChainQueryFilter::new().entry_type(Transaction::entry_type()?);
+#[hdk_extern(infallible)]
+fn post_commit(headers: Vec<SignedHeaderHashed>) {
+    let transactions_headers: Vec<SignedHeaderHashed> = headers
+        .into_iter()
+        .filter(|shh| match shh.header().entry_type() {
+            Some(entry_type) => entry_type.eq(&Transaction::entry_type().unwrap()),
+            _ => false,
+        })
+        .collect();
 
-    let activity = get_agent_activity(agent_pub_key, filter, ActivityRequest::Full)?;
+
+    if transactions_headers.len() > 0 {
+        let get_inputs = transactions_headers
+            .into_iter()
+            .map(|h| GetInput::new(h.header_address().clone().into(), Default::default()))
+            .collect();
+
+        let elements = HDK.with(|hdk| hdk.borrow().get(get_inputs)).unwrap();
+
+        let transactions_i_created: Vec<_> = elements
+            .into_iter()
+            .filter_map(|el| el)
+            .filter_map(|el| el.entry().as_option().map(|e| e.clone()))
+            .filter(|entry| match entry {
+                Entry::CounterSign(session_data, _entry_bytes) => {
+                    let state = session_data
+                        .agent_state_for_agent(&agent_info().unwrap().agent_initial_pubkey)
+                        .unwrap();
+                    state.agent_index().to_owned() == 0
+                }
+                _ => false,
+            })
+            .collect();
+
+        if transactions_i_created.len() > 0 {
+            let result = call_remote(
+                agent_info().unwrap().agent_initial_pubkey,
+                zome_info().unwrap().name,
+                "clean_transaction_requests".into(),
+                None,
+                (),
+            );
+
+            match result.clone() {
+                Ok(ZomeCallResponse::Ok(_)) => {}
+                _ => error!(
+                    "Error trying to clean the transaction requests {:?} {}",
+                    result,
+                    agent_info().unwrap().agent_initial_pubkey
+                ),
+            };
+        }
+    }
+}
+
+#[hdk_extern]
+pub fn clean_transaction_requests(_: ()) -> ExternResult<()> {
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
+    let links = get_links(my_pub_key.into(), None)?;
+
+    let my_transactions = query_my_transactions(())?;
+
+    for (transaction_hash, transaction) in my_transactions {
+        let info = transaction.info.clone();
+
+        let transaction_request_hash = HeaderHash::try_from(info)?;
+
+        if let Some(link) = links.iter().find(|link| {
+            link.target
+                .clone()
+                .retype(hash_type::Header)
+                .eq(&transaction_request_hash)
+        }) {
+            error!("hey {}", agent_info()?.agent_initial_pubkey);
+            delete_link(link.create_link_hash.clone())?;
+
+            create_link(
+                transaction_request_hash.clone().retype(hash_type::Entry),
+                HeaderHash::from(transaction_hash).retype(hash_type::Entry),
+                HdkLinkType::Any,
+                (),
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+#[hdk_extern]
+pub fn get_my_transaction_requests(
+    _: (),
+) -> ExternResult<BTreeMap<HeaderHashB64, TransactionRequest>> {
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
+    let links = get_links(my_pub_key.into(), None)?;
+
+    let get_inputs = links
+        .into_iter()
+        .map(|link| {
+            GetInput::new(
+                link.target.retype(hash_type::Header).into(),
+                GetOptions::default(),
+            )
+        })
+        .collect();
+
+    let elements = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
+
+    let transaction_requests = elements
+        .into_iter()
+        .filter_map(|el| el)
+        .map(|el| {
+            let header_hash = HeaderHashB64::from(el.header_address().clone());
+
+            let transaction_request: TransactionRequest =
+                el.entry()
+                    .to_app_option()?
+                    .ok_or(WasmError::Guest(String::from(
+                        "Malformed transaction request",
+                    )))?;
+
+            Ok((header_hash, transaction_request))
+        })
+        .collect::<ExternResult<BTreeMap<HeaderHashB64, TransactionRequest>>>()?;
+
+    Ok(transaction_requests)
+}
+
+fn get_chain_top(agent_pub_key: AgentPubKey) -> ExternResult<HeaderHash> {
+    let activity = get_agent_activity(
+        agent_pub_key,
+        ChainQueryFilter::new(),
+        ActivityRequest::Full,
+    )?;
 
     let highest_observed = activity
         .highest_observed

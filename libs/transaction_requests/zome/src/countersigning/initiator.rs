@@ -1,4 +1,6 @@
-use hc_lib_transactions::{create_transaction, get_latest_transaction_for, Transaction};
+use hc_lib_transactions::{
+    build_preflight_request, create_transaction, get_latest_transaction_for, Transaction,
+};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -11,12 +13,18 @@ pub fn attempt_create_transaction(
     transaction_request_element: Element,
     counterparty_chain_top: HeaderHashB64,
 ) -> ExternResult<(HeaderHashB64, Transaction)> {
-    let counterparty = transaction_request_element.header().author().clone();
+    let transaction_request: TransactionRequest = transaction_request_element
+        .entry()
+        .to_app_option()?
+        .ok_or(WasmError::Guest(String::from(
+            "Malformed transaction request",
+        )))?;
+    let counterparty = transaction_request.get_counterparty()?;
 
     let response = call_remote(
-        counterparty.clone(),
+        counterparty.clone().into(),
         zome_info()?.name,
-        "is_intent_still_valid".into(),
+        "pre_transaction_check".into(),
         None,
         PreTransactionCheckInput {
             transaction_request_hash: transaction_request_element.header_address().clone().into(),
@@ -27,13 +35,19 @@ pub fn attempt_create_transaction(
     match response.clone() {
         ZomeCallResponse::Ok(_) => Ok(()),
         _ => Err(WasmError::Guest(format!(
-            "Error with fn is_intent_still_valid: {:?}",
+            "Error with fn pre_transaction_check: {:?}",
             response
         ))),
     }?;
 
     let transaction = build_transaction(transaction_request_element)?;
-    let preflight_request = build_preflight_request(transaction.clone())?;
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
+
+    let countersigning_agents = vec![
+        (AgentPubKey::from(my_pub_key.clone()), vec![]),
+        (AgentPubKey::from(counterparty.clone()), vec![]),
+    ];
+    let preflight_request = build_preflight_request(transaction.clone(), countersigning_agents)?;
 
     let my_response = match accept_countersigning_preflight_request(preflight_request)? {
         PreflightRequestAcceptance::Accepted(response) => Ok(response),
@@ -43,7 +57,7 @@ pub fn attempt_create_transaction(
     }?;
 
     let response = call_remote(
-        counterparty.clone(),
+        counterparty.clone().into(),
         zome_info()?.name,
         "request_create_transaction".into(),
         None,
@@ -101,39 +115,4 @@ fn build_transaction(transaction_request_element: Element) -> ExternResult<Trans
         SerializedBytes::try_from(transaction_request_element.header_address())?,
     )?;
     Ok(transaction)
-}
-
-fn build_preflight_request(transaction: Transaction) -> ExternResult<PreflightRequest> {
-    let transaction_hash = hash_entry(&transaction)?;
-
-    let times = session_times_from_millis(5_000)?;
-
-    let header_base = HeaderBase::Create(CreateBase::new(Transaction::entry_type()?));
-
-    let countersigning_agents = vec![
-        (
-            AgentPubKey::from(transaction.spender.agent_pub_key.clone()),
-            vec![],
-        ),
-        (
-            AgentPubKey::from(transaction.recipient.agent_pub_key.clone()),
-            vec![],
-        ),
-    ];
-
-    let bytes = SerializedBytes::try_from(transaction.clone())?;
-
-    let preflight_bytes = PreflightBytes(bytes.bytes().to_vec());
-
-    let preflight_request = PreflightRequest::try_new(
-        transaction_hash,
-        countersigning_agents,
-        Some(0),
-        times,
-        header_base,
-        preflight_bytes,
-    )
-    .map_err(|err| WasmError::Guest(format!("Could not create preflight request: {:?}", err)))?;
-
-    Ok(preflight_request)
 }

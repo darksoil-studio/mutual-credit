@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "start": "npm run build:happ && npm run start:agent",
+    "test": "npm t -w lets-we-game",
     "network": "npm run build:happ && concurrently-repeat \"npm run start:agent\"",
     "start:agent": "cross-env HC_PORT=$(port) concurrently -k \"npm run start:happ\" \"sleep 5 && npm run start -w @llavors-mutues/mutual-credit\"",
     "start:happ": "RUST_LOG=warn hc s generate ./workdir/mutual-credit.happ --run=$HC_PORT -a mutual-credit-mixin network mdns",

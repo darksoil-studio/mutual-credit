@@ -5,29 +5,14 @@ use hdk::prelude::*;
 
 use crate::Transaction;
 
-pub fn create_transaction(
-    transaction: Transaction,
-    responses: Vec<PreflightResponse>,
-) -> ExternResult<HeaderHash> {
-    let entry = Entry::CounterSign(
-        Box::new(
-            CounterSigningSessionData::try_from_responses(responses).map_err(
-                |countersigning_error| WasmError::Guest(countersigning_error.to_string()),
-            )?,
-        ),
-        transaction.clone().try_into()?,
-    );
+#[hdk_extern]
+pub fn query_my_transactions(_: ()) -> ExternResult<BTreeMap<HeaderHashB64, Transaction>> {
+    let filter = ChainQueryFilter::new()
+        .entry_type(Transaction::entry_type()?)
+        .include_entries(true);
+    let elements = query(filter)?;
 
-    let transaction_header_hash = HDK.with(|h| {
-        h.borrow().create(CreateInput::new(
-            Transaction::entry_def_id(),
-            entry,
-            // Countersigned entries MUST have strict ordering.
-            ChainTopOrdering::Strict,
-        ))
-    })?;
-
-    Ok(transaction_header_hash)
+    elements_to_transactions(elements)
 }
 
 #[hdk_extern]
@@ -36,13 +21,27 @@ pub fn get_transactions_for_agent(
 ) -> ExternResult<BTreeMap<HeaderHashB64, Transaction>> {
     let activity = get_transactions_activity(agent_pub_key.into())?;
 
-    let transactions = activity
+    let get_inputs = activity
         .valid_activity
         .into_iter()
-        .map(|(_, header_hash)| {
-            let element = get(header_hash.clone(), GetOptions::default())?
-                .ok_or(WasmError::Guest(String::from("Couldn't get transaction")))?;
+        .map(|(_, header_hash)| GetInput::new(header_hash.into(), GetOptions::default()))
+        .collect();
 
+    let maybe_elements = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
+
+    let elements = maybe_elements.into_iter().filter_map(|el| el).collect();
+
+    let transactions = elements_to_transactions(elements)?;
+
+    Ok(transactions)
+}
+
+pub fn elements_to_transactions(
+    elements: Vec<Element>,
+) -> ExternResult<BTreeMap<HeaderHashB64, Transaction>> {
+    let transactions = elements
+        .into_iter()
+        .map(|element| {
             let entry = element
                 .entry()
                 .as_option()
@@ -50,7 +49,7 @@ pub fn get_transactions_for_agent(
 
             let transaction = entry_to_transaction(entry.clone())?;
 
-            let hash_b64 = HeaderHashB64::from(header_hash.clone());
+            let hash_b64 = HeaderHashB64::from(element.header_address().clone());
 
             Ok((hash_b64, transaction))
         })

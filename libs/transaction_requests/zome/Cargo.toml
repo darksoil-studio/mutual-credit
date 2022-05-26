@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "hc_lib_transaction_requests"
 version = "0.0.1"
 

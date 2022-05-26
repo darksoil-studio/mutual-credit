@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use hc_lib_transaction_requests::*;
 use hc_lib_transactions::*;
 use hdk::prelude::holo_hash::*;
@@ -10,7 +12,7 @@ async fn simple_transaction() {
     // Use prebuilt DNA file
     let dna_path = std::env::current_dir()
         .unwrap()
-        .join("../../../workdir/lets.dna");
+        .join("../../workdir/lets.dna");
     let dna = SweetDnaFile::from_bundle(&dna_path).await.unwrap();
 
     // Set up conductors
@@ -23,7 +25,16 @@ async fn simple_transaction() {
     let alice_zome = alice.zome("lets");
     let bob_zome = bobbo.zome("lets");
 
+    println!("Alice {}", alice.agent_pubkey());
+    println!("Bob {}", bobbo.agent_pubkey());
+
     consistency_10s(&[&alice, &bobbo]).await;
+
+    let map: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
+        .call(&bob_zome, "query_my_transactions", ())
+        .await;
+
+    assert_eq!(map.len(), 0);
 
     let transaction_request_input = CreateTransactionRequestInput {
         transaction_request_type: TransactionRequestType::Send,
@@ -31,7 +42,7 @@ async fn simple_transaction() {
         amount: 10.0,
     };
 
-    let transaction_request_hash: HeaderHashB64 = conductors[0]
+    let (transaction_request_hash, _): (HeaderHashB64, TransactionRequest) = conductors[0]
         .call(
             &alice_zome,
             "create_transaction_request",
@@ -41,6 +52,18 @@ async fn simple_transaction() {
 
     consistency_10s(&[&alice, &bobbo]).await;
 
+    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[0]
+        .call(&alice_zome, "get_my_transaction_requests", ())
+        .await;
+
+    assert_eq!(transaction_requests.len(), 1);
+
+    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[1]
+        .call(&bob_zome, "get_my_transaction_requests", ())
+        .await;
+
+    assert_eq!(transaction_requests.len(), 1);
+
     let _txn: (HeaderHashB64, Transaction) = conductors[1]
         .call(
             &bob_zome,
@@ -48,4 +71,25 @@ async fn simple_transaction() {
             transaction_request_hash,
         )
         .await;
+
+    consistency_10s(&[&alice, &bobbo]).await;
+
+    let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
+        .call(&bob_zome, "query_my_transactions", ())
+        .await;
+
+    assert_eq!(transactions.len(), 1);
+    assert_eq!(transactions.into_iter().next().unwrap().1.amount, 10.0);
+
+    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[0]
+        .call(&alice_zome, "get_my_transaction_requests", ())
+        .await;
+
+    assert_eq!(transaction_requests.len(), 1);
+
+    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[1]
+        .call(&bob_zome, "get_my_transaction_requests", ())
+        .await;
+
+    assert_eq!(transaction_requests.len(), 0);
 }
