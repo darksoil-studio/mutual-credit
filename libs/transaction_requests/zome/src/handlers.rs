@@ -97,7 +97,6 @@ fn post_commit(headers: Vec<SignedHeaderHashed>) {
         })
         .collect();
 
-
     if transactions_headers.len() > 0 {
         let get_inputs = transactions_headers
             .into_iter()
@@ -133,9 +132,8 @@ fn post_commit(headers: Vec<SignedHeaderHashed>) {
             match result.clone() {
                 Ok(ZomeCallResponse::Ok(_)) => {}
                 _ => error!(
-                    "Error trying to clean the transaction requests {:?} {}",
+                    "Error trying to clean the transaction requests {:?}",
                     result,
-                    agent_info().unwrap().agent_initial_pubkey
                 ),
             };
         }
@@ -160,7 +158,6 @@ pub fn clean_transaction_requests(_: ()) -> ExternResult<()> {
                 .retype(hash_type::Header)
                 .eq(&transaction_request_hash)
         }) {
-            error!("hey {}", agent_info()?.agent_initial_pubkey);
             delete_link(link.create_link_hash.clone())?;
 
             create_link(
