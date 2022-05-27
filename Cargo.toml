@@ -1,7 +1,9 @@
 [workspace]
 members = [
+  "tests",
   "apps/*/zomes/*",
-  "libs/*/zome",
+  "libs/*/zomes/coordinator",
+  "libs/*/zomes/integrity",
 ]
 resolver = "2"
 

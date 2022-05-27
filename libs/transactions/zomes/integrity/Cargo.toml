@@ -1,0 +1,15 @@
+[package]
+edition = "2021"
+name = "hc_zome_transactions_integrity"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "hc_zome_transactions_integrity"
+
+[dependencies]
+serde = "1"
+derive_more = "0"
+chrono = {version = "0.4", features = ["serde"]}
+
+hdk = { version = "0.0.127", features = ["encoding"] }

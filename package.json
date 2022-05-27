@@ -7,7 +7,10 @@
   ],
   "scripts": {
     "start": "npm run build:happ && npm run start:agent",
-    "test": "npm t -w lets-we-game",
+    "test": "npm run build:happ && CARGO_TARGET_DIR=target cargo t",
+    "build:happ": "npm run build:dnas && hc app pack ./tests/workdir",
+    "build:dnas": "npm run build:zomes && hc dna pack ./tests/workdir",
+    "build:zomes": "CARGO_TARGET_DIR=targetwasm cargo build --workspace --release --target wasm32-unknown-unknown",
     "network": "npm run build:happ && concurrently-repeat \"npm run start:agent\"",
     "start:agent": "cross-env HC_PORT=$(port) concurrently -k \"npm run start:happ\" \"sleep 5 && npm run start -w @llavors-mutues/mutual-credit\"",
     "start:happ": "RUST_LOG=warn hc s generate ./workdir/mutual-credit.happ --run=$HC_PORT -a mutual-credit-mixin network mdns",

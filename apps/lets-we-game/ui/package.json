@@ -10,10 +10,6 @@
     ".": "./dist/index.js"
   },
   "scripts": {
-    "test": "npm run build:happ && CARGO_TARGET_DIR=../../../target cargo test --release -p lets",
-    "build:happ": "npm run build:dnas && hc app pack ../workdir",
-    "build:dnas": "npm run build:zomes && hc dna pack ../workdir",
-    "build:zomes": "CARGO_TARGET_DIR=../../../targetwasm cargo build --workspace --release --target wasm32-unknown-unknown",
     "analyze": "cem analyze --litelement",
     "start": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wds\"",
     "build": "tsc && npm run analyze -- --exclude dist",
