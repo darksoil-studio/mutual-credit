@@ -1,23 +1,12 @@
-use hc_zome_transactions::Transaction;
-use hdk::prelude::*;
 use hdk::prelude::holo_hash::*;
+use hdk::prelude::*;
 
-use crate::TransactionRequest;
+use hc_zome_transactions_integrity::Transaction;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum SignalType {
-    TransactionRequestReceived{
-        transaction_request_hash: HeaderHashB64,
-        transaction_request: TransactionRequest
-    },
-    TransactionRequestAccepted{
-        transaction_request_hash: HeaderHashB64,
-        transaction: (HeaderHashB64, Transaction)
-    },
-    TransactionRequestCancelled{
-        transaction_request_hash: HeaderHashB64,
-    },
-    TransactionRequestRejected{
-        transaction_request_hash: HeaderHashB64,
+    NewTransactionCreated {
+        transaction_hash: HeaderHashB64,
+        transaction: Transaction,
     },
 }

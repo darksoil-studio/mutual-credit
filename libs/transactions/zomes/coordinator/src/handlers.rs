@@ -1,8 +1,6 @@
 use std::collections::BTreeMap;
 
-use hc_zome_transactions_integrity::{
-    entry_to_transaction, get_transactions_activity, CreateTransactionInput, Transaction,
-};
+use hc_zome_transactions_integrity::{entry_to_transaction, CreateTransactionInput, Transaction};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -58,6 +56,18 @@ pub fn get_transactions_for_agent(
     let transactions = elements_to_transactions(elements)?;
 
     Ok(transactions)
+}
+
+#[hdk_extern]
+pub fn get_transactions_activity(agent_pub_key: AgentPubKeyB64) -> ExternResult<AgentActivity> {
+    hc_zome_transactions_integrity::get_transactions_activity(agent_pub_key.into())
+}
+
+#[hdk_extern]
+pub fn get_latest_transaction_for_agent(
+    agent_pub_key: AgentPubKeyB64,
+) -> ExternResult<Option<(HeaderHashB64, Transaction)>> {
+    hc_zome_transactions_integrity::get_latest_transaction_for_agent(agent_pub_key.into())
 }
 
 pub fn elements_to_transactions(

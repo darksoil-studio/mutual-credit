@@ -12,7 +12,7 @@ async fn simple_transaction() {
     // Use prebuilt DNA file
     let dna_path = std::env::current_dir()
         .unwrap()
-        .join("../workdir/mutual_credit.dna");
+        .join("./workdir/mutual_credit.dna");
     let dna = SweetDnaFile::from_bundle(&dna_path).await.unwrap();
 
     // Set up conductors
@@ -40,7 +40,6 @@ async fn simple_transaction() {
     let map: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
         .call(&bob_transactions, "query_my_transactions", ())
         .await;
-
     assert_eq!(map.len(), 0);
 
     let transaction_request_input = CreateTransactionRequestInput {
@@ -82,6 +81,8 @@ async fn simple_transaction() {
             transaction_request_hash,
         )
         .await;
+
+    println!("hi {:?}", _txn);
 
     consistency_10s(&[&alice, &bobbo]).await;
 

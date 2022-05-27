@@ -1,10 +1,9 @@
 use hc_zome_transaction_requests_integrity::checks::check_preflight_response;
-use hc_zome_transactions_integrity::{
-    build_preflight_request, get_latest_transaction_for, Transaction,
-};
+use hc_zome_transactions_integrity::{build_preflight_request, Transaction};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
+use crate::utils::call_transactions;
 use crate::TransactionRequest;
 
 use super::common::create_transaction;
@@ -104,8 +103,8 @@ fn build_transaction(transaction_request_element: Element) -> ExternResult<Trans
     let spender = transaction_request.spender_pub_key.clone();
     let recipient = transaction_request.recipient_pub_key.clone();
 
-    let spender_latest_transaction = get_latest_transaction_for(spender.into())?;
-    let recipient_latest_transaction = get_latest_transaction_for(recipient.into())?;
+    let spender_latest_transaction = get_latest_transaction_for_agent(spender.into())?;
+    let recipient_latest_transaction = get_latest_transaction_for_agent(recipient.into())?;
 
     let transaction = Transaction::from_previous_transactions(
         transaction_request.spender_pub_key.into(),
@@ -116,4 +115,13 @@ fn build_transaction(transaction_request_element: Element) -> ExternResult<Trans
         SerializedBytes::try_from(transaction_request_element.header_address())?,
     )?;
     Ok(transaction)
+}
+
+fn get_latest_transaction_for_agent(
+    agent_pub_key: AgentPubKeyB64,
+) -> ExternResult<Option<(HeaderHashB64, Transaction)>> {
+    call_transactions(
+        String::from("get_latest_transaction_for_agent"),
+        agent_pub_key,
+    )
 }

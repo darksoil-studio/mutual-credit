@@ -22,7 +22,7 @@ pub struct Transaction {
 impl Transaction {
     pub fn entry_type() -> ExternResult<EntryType> {
         Ok(EntryType::App(AppEntryType::new(
-            entry_def_index!(Transaction)?,
+            EntryDefIndex(0),
             zome_info()?.id,
             EntryVisibility::Public,
         )))

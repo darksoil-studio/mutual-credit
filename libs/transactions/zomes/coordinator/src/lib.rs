@@ -1,11 +1,10 @@
 use hc_zome_transactions_integrity::Transaction;
 use hdk::prelude::*;
 
-mod checks;
 mod countersigning;
 mod handlers;
+mod signals;
 
-pub use checks::*;
 pub use countersigning::*;
 pub use handlers::*;
 

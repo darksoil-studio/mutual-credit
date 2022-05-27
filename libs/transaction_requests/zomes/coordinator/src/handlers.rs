@@ -54,6 +54,21 @@ pub fn create_transaction_request(
 }
 
 #[hdk_extern]
+pub fn cancel_transaction_request(_transaction_request_hash: HeaderHashB64) -> ExternResult<()> {
+    Ok(())
+}
+
+#[hdk_extern]
+pub fn reject_transaction_request(_transaction_request_hash: HeaderHashB64) -> ExternResult<()> {
+    Ok(())
+}
+
+#[hdk_extern]
+pub fn clear_transaction_request(_transaction_request_hash: HeaderHashB64) -> ExternResult<()> {
+    Ok(())
+}
+
+#[hdk_extern]
 pub fn accept_transaction_request(
     transaction_request_hash: HeaderHashB64,
 ) -> ExternResult<(HeaderHashB64, Transaction)> {
@@ -83,16 +98,15 @@ pub fn accept_transaction_request(
 
 #[hdk_extern(infallible)]
 fn post_commit(headers: Vec<SignedHeaderHashed>) {
-    let transactions_headers: Vec<SignedHeaderHashed> = headers
+    let my_transactions = query_my_transactions().unwrap();
+
+    let my_new_transactions: Vec<SignedHeaderHashed> = headers
         .into_iter()
-        .filter(|shh| match shh.header().entry_type() {
-            Some(entry_type) => entry_type.eq(&Transaction::entry_type().unwrap()),
-            _ => false,
-        })
+        .filter(|h| my_transactions.contains_key(&HeaderHashB64::from(h.header_address().clone())))
         .collect();
 
-    if transactions_headers.len() > 0 {
-        let get_inputs = transactions_headers
+    if my_new_transactions.len() > 0 {
+        let get_inputs = my_new_transactions
             .into_iter()
             .map(|h| GetInput::new(h.header_address().clone().into(), Default::default()))
             .collect();
@@ -167,8 +181,8 @@ pub fn clean_transaction_requests(_: ()) -> ExternResult<()> {
 }
 
 fn query_my_transactions() -> ExternResult<BTreeMap<HeaderHashB64, Transaction>> {
-    let response = call(
-        CallTargetCell::Local,
+    let response = call_remote(
+        agent_info().unwrap().agent_initial_pubkey,
         "transactions".into(),
         "query_my_transactions".into(),
         None,
