@@ -20,7 +20,7 @@ impl TransactionRequest {
             Ok(self.spender_pub_key.clone())
         } else {
             Err(WasmError::Guest(String::from(
-                "I don't participate in this offer",
+                "I don't participate in this TransactionRequest",
             )))
         }
     }

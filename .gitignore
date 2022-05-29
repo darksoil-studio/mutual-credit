@@ -1,6 +1,7 @@
 node_modules/
 /dist/
 target
+targettest
 targetwasm
 /.cargo/
 *.happ

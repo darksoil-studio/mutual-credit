@@ -1,14 +1,11 @@
 use std::collections::BTreeMap;
 
-use hc_zome_transaction_requests_integrity::CreateTransactionRequestInput;
-use hc_zome_transactions_integrity::Transaction;
+use hc_zome_transaction_requests_integrity::{call_transactions, CreateTransactionRequestInput};
+use hc_zome_transactions_integrity::{AttemptCreateTransactionInput, Transaction};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-use crate::{
-    countersigning::initiator::attempt_create_transaction, TransactionRequest,
-    TransactionRequestType,
-};
+use crate::{utils::build_transaction, TransactionRequest, TransactionRequestType};
 
 #[hdk_extern]
 pub fn create_transaction_request(
@@ -76,7 +73,9 @@ pub fn accept_transaction_request(
         HeaderHash::from(transaction_request_hash.clone()),
         GetOptions::default(),
     )?
-    .ok_or(WasmError::Guest(String::from("Couldn't get intent")))?;
+    .ok_or(WasmError::Guest(String::from(
+        "Couldn't get transaction request",
+    )))?;
 
     let transaction_request: TransactionRequest = transaction_request_element
         .entry()
@@ -88,9 +87,14 @@ pub fn accept_transaction_request(
 
     let counterparty_chain_top = get_chain_top(counterparty.into())?;
 
-    let result = attempt_create_transaction(
-        transaction_request_element.clone(),
-        counterparty_chain_top.into(),
+    let transaction = build_transaction(transaction_request_element)?;
+
+    let result: (HeaderHashB64, Transaction) = call_transactions(
+        "attempt_create_transaction".into(),
+        AttemptCreateTransactionInput {
+            transaction,
+            counterparty_chain_top: counterparty_chain_top.into(),
+        },
     )?;
 
     Ok(result)

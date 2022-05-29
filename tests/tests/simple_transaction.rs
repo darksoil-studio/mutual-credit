@@ -4,6 +4,7 @@ use hc_zome_transaction_requests_integrity::*;
 use hc_zome_transactions_integrity::*;
 use hdk::prelude::holo_hash::*;
 
+use holochain::conductor::api::error::ConductorApiResult;
 use holochain::test_utils::consistency_10s;
 use holochain::{conductor::config::ConductorConfig, sweettest::*};
 
@@ -74,22 +75,25 @@ async fn simple_transaction() {
 
     assert_eq!(transaction_requests.len(), 1);
 
-    let _txn: (HeaderHashB64, Transaction) = conductors[1]
-        .call(
+    let _txn: ConductorApiResult<(HeaderHashB64, Transaction)> = conductors[1]
+        .call_fallible(
             &bob_transaction_requests,
             "accept_transaction_request",
             transaction_request_hash,
         )
         .await;
 
-    println!("hi {:?}", _txn);
-
     consistency_10s(&[&alice, &bobbo]).await;
+
+    let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[0]
+        .call(&alice_transactions, "query_my_transactions", ())
+        .await;
+    assert_eq!(transactions.len(), 1);
+    assert_eq!(transactions.into_iter().next().unwrap().1.amount, 10.0);
 
     let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
         .call(&bob_transactions, "query_my_transactions", ())
         .await;
-
     assert_eq!(transactions.len(), 1);
     assert_eq!(transactions.into_iter().next().unwrap().1.amount, 10.0);
 
@@ -107,5 +111,5 @@ async fn simple_transaction() {
         .call(&bob_transaction_requests, "get_my_transaction_requests", ())
         .await;
 
-    assert_eq!(transaction_requests.len(), 0);
+    assert_eq!(transaction_requests.len(), 1);
 }

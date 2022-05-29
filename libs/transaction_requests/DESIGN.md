@@ -16,7 +16,7 @@ Alice-->>Bob: Cool, here is mine!
 sequenceDiagram
 
 Initiator->>Initiator: attempt_create_transaction(intent_hash, responder_chain_top)
-Initiator->>Responder: is_intent_is_still_valid(responder_chain_top)
+Initiator->>Responder: transaction_preflight(responder_chain_top)
 Responder-->>Initiator: yes
 Initiator-->>Initiator: build_new_transaction()
 Initiator-->>Initiator: build_preflight_request()

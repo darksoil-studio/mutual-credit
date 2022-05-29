@@ -1,9 +1,10 @@
 use hdk::prelude::*;
+use hdk::prelude::holo_hash::*;
 
 use crate::Transaction;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CreateTransactionInput {
+pub struct AttemptCreateTransactionInput {
     pub transaction: Transaction,
-    pub preflight_responses: Vec<PreflightResponse>,
+    pub counterparty_chain_top: HeaderHashB64,
 }

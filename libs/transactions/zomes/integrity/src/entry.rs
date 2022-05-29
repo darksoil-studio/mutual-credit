@@ -20,12 +20,14 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn entry_type() -> ExternResult<EntryType> {
-        Ok(EntryType::App(AppEntryType::new(
-            EntryDefIndex(0),
-            zome_info()?.id,
-            EntryVisibility::Public,
-        )))
+    pub fn try_from_entry(entry: Entry) -> ExternResult<Transaction> {
+        match entry {
+            Entry::CounterSign(_session_data, entry_bytes) => {
+                let transaction = Transaction::try_from(entry_bytes.into_sb())?;
+                Ok(transaction)
+            }
+            _ => Err(WasmError::Guest(String::from("Malformed entry"))),
+        }
     }
 
     pub fn from_previous_transactions(
@@ -46,7 +48,7 @@ impl Transaction {
         )?;
 
         let resulting_spender_balance = previous_spender_balance - amount;
-        let resulting_recipient_balance = previous_recipient_balance - amount;
+        let resulting_recipient_balance = previous_recipient_balance + amount;
 
         let spender = TransactionParty {
             agent_pub_key: spender.into(),
@@ -77,6 +79,20 @@ impl Transaction {
         } else {
             Err(WasmError::Guest(String::from(
                 "This agent did not participate in the transaction",
+            )))
+        }
+    }
+
+    pub fn get_counterparty(&self) -> ExternResult<TransactionParty> {
+        let my_pub_key: AgentPubKeyB64 = agent_info()?.agent_initial_pubkey.into();
+
+        if my_pub_key.eq(&self.spender.agent_pub_key) {
+            Ok(self.spender.clone())
+        } else if my_pub_key.eq(&self.recipient.agent_pub_key) {
+            Ok(self.spender.clone())
+        } else {
+            Err(WasmError::Guest(String::from(
+                "I don't participate in this Transaction",
             )))
         }
     }

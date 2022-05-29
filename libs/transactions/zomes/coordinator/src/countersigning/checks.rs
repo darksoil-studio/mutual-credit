@@ -2,9 +2,9 @@ use hc_zome_transactions_integrity::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-use crate::call_transactions;
+use crate::get_transactions_activity;
 
-pub fn check_preflight_response(preflight_response: PreflightResponse) -> ExternResult<()> {
+pub fn _check_preflight_response(preflight_response: PreflightResponse) -> ExternResult<()> {
     let preflight_request = preflight_response.request();
     let bytes = SerializedBytes::from(UnsafeBytes::from(
         preflight_request.preflight_bytes().0.clone(),
@@ -12,13 +12,13 @@ pub fn check_preflight_response(preflight_response: PreflightResponse) -> Extern
 
     let transaction = Transaction::try_from(bytes)?;
 
-    let author = get_author(&preflight_response)?;
+    let author = _get_author(&preflight_response)?;
 
     let party = transaction.get_party(&author)?;
 
     let chain_top = preflight_response.agent_state().chain_top();
 
-    check_transaction_is_the_latest(
+    _check_transaction_is_the_latest(
         author,
         party.previous_transaction_hash.map(|h| HeaderHash::from(h)),
         chain_top.clone(),
@@ -27,15 +27,12 @@ pub fn check_preflight_response(preflight_response: PreflightResponse) -> Extern
     Ok(())
 }
 
-pub fn check_transaction_is_the_latest(
+pub fn _check_transaction_is_the_latest(
     agent_pub_key: AgentPubKey,
     transaction_hash: Option<HeaderHash>,
     highest_observed: HeaderHash,
 ) -> ExternResult<()> {
-    let activity: AgentActivity = call_transactions(
-        "get_transactions_activity".into(),
-        AgentPubKeyB64::from(agent_pub_key.clone()),
-    )?;
+    let activity: AgentActivity = get_transactions_activity(agent_pub_key.into())?;
 
     let actual_highest = activity
         .clone()
@@ -69,7 +66,7 @@ pub fn check_transaction_is_the_latest(
     Ok(())
 }
 
-pub fn get_author(preflight_response: &PreflightResponse) -> ExternResult<AgentPubKey> {
+pub fn _get_author(preflight_response: &PreflightResponse) -> ExternResult<AgentPubKey> {
     let author_index = preflight_response.agent_state().agent_index().clone() as usize;
     let author = preflight_response
         .request()
