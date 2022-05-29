@@ -64,7 +64,7 @@ pub fn get_latest_transaction_for_agent(
     }
 }
 
-pub fn transaction_entry_type() -> ExternResult<EntryType> {
+pub(crate) fn transaction_entry_type() -> ExternResult<EntryType> {
     Ok(EntryType::App(AppEntryType::new(
         entry_def_index!(Transaction)?,
         zome_info()?.id,

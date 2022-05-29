@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "start": "npm run build:happ && npm run start:agent",
-    "test": "npm run build:happ && CARGO_TARGET_DIR=targettest cargo t",
+    "test": "npm run build:happ && RUST_LOG=info CARGO_TARGET_DIR=targettest cargo t",
     "build:happ": "npm run build:dnas && hc app pack ./tests/workdir",
     "build:dnas": "npm run build:zomes && hc dna pack ./tests/workdir",
     "build:zomes": "CARGO_TARGET_DIR=targetwasm cargo build --workspace --release --target wasm32-unknown-unknown",

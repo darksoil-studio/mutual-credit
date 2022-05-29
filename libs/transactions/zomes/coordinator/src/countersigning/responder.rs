@@ -5,12 +5,12 @@ use hdk::prelude::*;
 use super::common::create_transaction;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PreTransactionCheckInput {
+pub struct TransactionPreflight {
     pub chain_top: HeaderHashB64,
     pub preflight_request: PreflightRequest,
 }
 #[hdk_extern]
-pub fn transaction_preflight(input: PreTransactionCheckInput) -> ExternResult<PreflightResponse> {
+pub fn transaction_preflight(input: TransactionPreflight) -> ExternResult<PreflightResponse> {
     check_is_top_of_the_chain(input.chain_top.into())?;
     // TODO: Add custom checks
     // check_transaction_request_is_still_valid(input.transaction_request_hash.into())?;

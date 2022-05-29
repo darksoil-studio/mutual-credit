@@ -5,7 +5,7 @@ use hdk::prelude::*;
 use crate::transaction_entry_type;
 
 use super::common::create_transaction;
-use super::responder::PreTransactionCheckInput;
+use super::responder::TransactionPreflight;
 
 #[hdk_extern]
 pub fn attempt_create_transaction(
@@ -27,7 +27,7 @@ pub fn attempt_create_transaction(
         zome_info()?.name,
         "transaction_preflight".into(),
         None,
-        PreTransactionCheckInput {
+        TransactionPreflight {
             preflight_request: preflight_request.clone(),
             chain_top: input.counterparty_chain_top.clone(),
         },
@@ -58,13 +58,15 @@ pub fn attempt_create_transaction(
         vec![my_response.clone(), counterparty_response.clone()],
     )?;
 
-    match response {
-        ZomeCallResponse::Ok(_header_hash) => Ok(()),
+    let result = match response {
+        ZomeCallResponse::Ok(result) => Ok(result),
         _ => Err(WasmError::Guest(format!(
             "Error with fn request_create_transaction {:?}",
             response
         ))),
     }?;
+
+    let _counterparty_header_hash: HeaderHashB64 = result.decode()?;
 
     let header_hash = create_transaction(
         input.transaction.clone(),
@@ -91,7 +93,7 @@ fn build_preflight_request(
     let preflight_request = PreflightRequest::try_new(
         transaction_hash,
         countersigning_agents,
-        Some(0),
+        None,
         times,
         header_base,
         preflight_bytes,
