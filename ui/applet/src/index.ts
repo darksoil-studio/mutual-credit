@@ -1,3 +1,6 @@
+import { ProfilesStore, ProfilesClient } from 'lib';
+import 'lib/mutual_credit/profiles/elements/profiles-context.js';
+
 import { TransactionRequestsStore, TransactionRequestsClient } from 'lib';
 import 'lib/mutual_credit/transaction-requests/elements/transaction-requests-context.js';
 
@@ -52,6 +55,8 @@ function groupViews(
         ),
     },
     entries: {}
+  profiles_integrity: {},
+}
   transaction_requests_integrity: {},
 }
   transactions_integrity: {},
@@ -109,5 +114,22 @@ function wrapTransactionRequestsGroupView(
     html`<transaction-requests-context .store=${ transactionRequestsStore}>
       ${innerTemplate}
     </transaction-requests-context>`);
+}
+
+
+function wrapProfilesGroupView(
+  client: AppAgentClient,
+  groupInfo: GroupInfo,
+  groupServices: GroupServices,
+  innerTemplate: TemplateResult
+): TemplateResult {
+  const profilesStore = new ProfilesStore(new ProfilesClient(client, 'profiles'));
+  return wrapGroupView(
+    client,
+    groupInfo,
+    groupServices,
+    html`<profiles-context .store=${ profilesStore}>
+      ${innerTemplate}
+    </profiles-context>`);
 }
 

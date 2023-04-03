@@ -14,6 +14,10 @@ integrity:
       hash: ~
       bundled: "../../../target/wasm32-unknown-unknown/release/transaction_requests_integrity.wasm"
       dependencies: ~
+    - name: profiles_integrity
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/profiles_integrity.wasm"
+      dependencies: ~
 coordinator:
   zomes:
     - name: transactions
@@ -26,3 +30,8 @@ coordinator:
       bundled: "../../../target/wasm32-unknown-unknown/release/transaction_requests.wasm"
       dependencies:
         - name: transaction_requests_integrity
+    - name: profiles
+      hash: ~
+      bundled: "../../../target/wasm32-unknown-unknown/release/profiles.wasm"
+      dependencies:
+        - name: profiles_integrity

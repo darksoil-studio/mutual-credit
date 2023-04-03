@@ -14,6 +14,12 @@ hdk = "=0.1.1"
 holochain = "0.1.3"
 serde = "1"
 
+[workspace.dependencies.profiles]
+path = "dnas/mutual_credit/zomes/coordinator/profiles"
+
+[workspace.dependencies.profiles_integrity]
+path = "dnas/mutual_credit/zomes/integrity/profiles"
+
 [workspace.dependencies.transaction_requests]
 path = "dnas/mutual_credit/zomes/coordinator/transaction_requests"
 

@@ -1,3 +1,4 @@
+
 import { transactionRequestsStoreContext, TransactionRequestsStore, TransactionRequestsClient } from 'lib';
 
 import { transactionsStoreContext, TransactionsStore, TransactionsClient } from 'lib';
@@ -31,7 +32,7 @@ type View = { view: 'main' };
 @localized()
 @customElement('holochain-app')
 export class HolochainApp extends LitElement {
-  @provide({ context: transactionRequestsStoreContext })
+@provide({ context: transactionRequestsStoreContext })
   @property()
   _transactionRequestsStore!: TransactionRequestsStore;
 
@@ -63,6 +64,8 @@ export class HolochainApp extends LitElement {
     // Don't change this
     this._transactionsStore = new TransactionsStore(new TransactionsClient(appAgentClient, 'mutual_credit'));
     this._transactionRequestsStore = new TransactionRequestsStore(new TransactionRequestsClient(appAgentClient, 'mutual_credit'));
+    this._profilesStore = new ProfilesStore(new ProfilesClient(appAgentClient, 'mutual_credit'));
+    this._myProfile = new StoreSubscriber(this, () => this._profilesStore.myProfile);
 }
 
   renderMyProfile() {
@@ -144,4 +147,6 @@ export class HolochainApp extends LitElement {
       }
     `,
     sharedStyles,
-  ];}
+  ];
+}
+
