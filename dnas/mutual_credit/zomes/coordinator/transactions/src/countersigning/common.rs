@@ -1,23 +1,24 @@
-use hc_zome_transactions_integrity::Transaction;
+use transactions_integrity::{Transaction, UnitEntryTypes};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
 pub fn create_transaction(
     transaction: Transaction,
     preflight_responses: Vec<PreflightResponse>,
-) -> ExternResult<HeaderHashB64> {
+) -> ExternResult<ActionHash> {
     let entry = Entry::CounterSign(
         Box::new(
-            CounterSigningSessionData::try_from_responses(preflight_responses).map_err(
-                |countersigning_error| WasmError::Guest(countersigning_error.to_string()),
-            )?,
+            CounterSigningSessionData::try_from_responses(preflight_responses, vec![]).map_err(
+                |countersigning_error| wasm_error!(WasmErrorInner::Guest(countersigning_error.to_string())
+            ))?,
         ),
         transaction.clone().try_into()?,
     );
 
     let transaction_header_hash = HDK.with(|h| {
         h.borrow().create(CreateInput::new(
-            Transaction::entry_def_id(),
+            ScopedEntryDefIndex::try_from(UnitEntryTypes::Transaction)?,
+            EntryVisibility::Public,
             entry,
             // Countersigned entries MUST have strict ordering.
             ChainTopOrdering::Strict,

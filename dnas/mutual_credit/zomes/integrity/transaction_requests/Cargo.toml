@@ -8,6 +8,10 @@ crate-type = ["cdylib", "rlib"]
 name = "transaction_requests_integrity"
 
 [dependencies]
+
+transactions_integrity = { workspace = true }
+
 hdi = { workspace = true }
+hdk = { workspace = true }
 
 serde = { workspace = true }

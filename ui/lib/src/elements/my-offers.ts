@@ -19,7 +19,6 @@ export abstract class MyOffers extends TransactorElement {
             style="flex: 1; margin: 16px;"
             @offer-selected=${(e: CustomEvent) =>
               (this._offerHash = e.detail.offerHash)}
-            }
           ></pending-offer-list>
           <span class="vertical-divider"></span>
           ${this._offerHash

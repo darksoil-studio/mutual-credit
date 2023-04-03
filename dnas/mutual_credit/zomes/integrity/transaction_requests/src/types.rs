@@ -7,6 +7,6 @@ use crate::TransactionRequestType;
 #[serde(rename_all = "camelCase")]
 pub struct CreateTransactionRequestInput {
     pub transaction_request_type: TransactionRequestType,
-    pub counterparty_pub_key: AgentPubKeyB64,
+    pub counterparty_pub_key: AgentPubKey,
     pub amount: f64,
 }

@@ -1,4 +1,4 @@
-use hc_zome_transactions_integrity::Transaction;
+use transactions_integrity::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -7,10 +7,11 @@ use crate::get_transactions_activity;
 pub fn _check_preflight_response(preflight_response: PreflightResponse) -> ExternResult<()> {
     let preflight_request = preflight_response.request();
     let bytes = SerializedBytes::from(UnsafeBytes::from(
-        preflight_request.preflight_bytes().0.clone(),
+        preflight_request.preflight_bytes.0.clone(),
     ));
 
-    let transaction = Transaction::try_from(bytes)?;
+    let transaction = Transaction::try_from(bytes)
+        .map_err(|e| wasm_error!(WasmErrorInner::Guest(format!("Failed to deserialize Transaction: {}", e))))?;
 
     let author = _get_author(&preflight_response)?;
 
@@ -20,7 +21,7 @@ pub fn _check_preflight_response(preflight_response: PreflightResponse) -> Exter
 
     _check_transaction_is_the_latest(
         author,
-        party.previous_transaction_hash.map(|h| HeaderHash::from(h)),
+        party.previous_transaction_hash.map(|h| ActionHash::from(h)),
         chain_top.clone(),
     )?;
 
@@ -29,24 +30,24 @@ pub fn _check_preflight_response(preflight_response: PreflightResponse) -> Exter
 
 pub fn _check_transaction_is_the_latest(
     agent_pub_key: AgentPubKey,
-    transaction_hash: Option<HeaderHash>,
-    highest_observed: HeaderHash,
+    transaction_hash: Option<ActionHash>,
+    highest_observed: ActionHash,
 ) -> ExternResult<()> {
     let activity: AgentActivity = get_transactions_activity(agent_pub_key.into())?;
 
     let actual_highest = activity
         .clone()
         .highest_observed
-        .ok_or(WasmError::Guest(String::from("Highest observed is None")))?;
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from("Highest observed is None"))))?;
 
     if actual_highest.hash.len() != 1 {
-        return Err(WasmError::Guest(String::from(
+        return Err(wasm_error!(WasmErrorInner::Guest(String::from(
             "More than one header is in the highest observed",
-        )));
+        ))));
     }
 
     if !actual_highest.hash[0].eq(&highest_observed) {
-        return Err(WasmError::Guest(String::from("Bad highest observed")));
+        return Err(wasm_error!(WasmErrorInner::Guest(String::from("Bad highest observed"))));
     }
 
     let valid = match (activity.valid_activity.last(), transaction_hash) {
@@ -58,9 +59,9 @@ pub fn _check_transaction_is_the_latest(
     };
 
     if !valid {
-        return Err(WasmError::Guest(String::from(
+        return Err(wasm_error!(WasmErrorInner::Guest(String::from(
             "Transaction is not the latest",
-        )));
+        ))));
     }
 
     Ok(())
@@ -70,11 +71,11 @@ pub fn _get_author(preflight_response: &PreflightResponse) -> ExternResult<Agent
     let author_index = preflight_response.agent_state().agent_index().clone() as usize;
     let author = preflight_response
         .request()
-        .signing_agents()
+        .signing_agents
         .get(author_index)
-        .ok_or(WasmError::Guest(String::from(
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
             "Malformed preflight response",
-        )))?
+        ))))?
         .0
         .clone();
 

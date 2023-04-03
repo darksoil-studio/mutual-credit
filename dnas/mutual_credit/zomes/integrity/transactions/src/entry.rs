@@ -1,15 +1,15 @@
-use hdk::prelude::holo_hash::*;
+use hdi::prelude::*;
 use hdk::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionParty {
-    pub agent_pub_key: AgentPubKeyB64,
-    pub previous_transaction_hash: Option<HeaderHashB64>,
+    pub agent_pub_key: AgentPubKey,
+    pub previous_transaction_hash: Option<ActionHash>,
     pub resulting_balance: f64,
 }
 
-#[hdk_entry(id = "transaction", visibility = "public")]
+#[hdk_entry_helper]
 #[derive(Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
@@ -23,18 +23,19 @@ impl Transaction {
     pub fn try_from_entry(entry: Entry) -> ExternResult<Transaction> {
         match entry {
             Entry::CounterSign(_session_data, entry_bytes) => {
-                let transaction = Transaction::try_from(entry_bytes.into_sb())?;
+                let transaction = Transaction::try_from(entry_bytes.into_sb())
+                    .map_err(|e| wasm_error!(WasmErrorInner::Guest(format!("Failed to deserialize Transaction: {}", e))))?;
                 Ok(transaction)
             }
-            _ => Err(WasmError::Guest(String::from("Malformed entry"))),
+            _ => Err(wasm_error!(WasmErrorInner::Guest(String::from("Malformed entry")))),
         }
     }
 
     pub fn from_previous_transactions(
         spender: AgentPubKey,
         recipient: AgentPubKey,
-        previous_spender_transaction: Option<(HeaderHashB64, Transaction)>,
-        previous_recipient_transaction: Option<(HeaderHashB64, Transaction)>,
+        previous_spender_transaction: Option<(ActionHash, Transaction)>,
+        previous_recipient_transaction: Option<(ActionHash, Transaction)>,
         amount: f64,
         info: SerializedBytes,
     ) -> ExternResult<Transaction> {
@@ -77,23 +78,23 @@ impl Transaction {
         } else if AgentPubKey::from(self.recipient.agent_pub_key.clone()).eq(agent_pub_key) {
             Ok(self.recipient.clone())
         } else {
-            Err(WasmError::Guest(String::from(
+            Err(wasm_error!(WasmErrorInner::Guest(String::from(
                 "This agent did not participate in the transaction",
-            )))
+            ))))
         }
     }
 
     pub fn get_counterparty(&self) -> ExternResult<TransactionParty> {
-        let my_pub_key: AgentPubKeyB64 = agent_info()?.agent_initial_pubkey.into();
+        let my_pub_key: AgentPubKey = agent_info()?.agent_initial_pubkey;
 
         if my_pub_key.eq(&self.spender.agent_pub_key) {
             Ok(self.spender.clone())
         } else if my_pub_key.eq(&self.recipient.agent_pub_key) {
             Ok(self.spender.clone())
         } else {
-            Err(WasmError::Guest(String::from(
+            Err(wasm_error!(WasmErrorInner::Guest(String::from(
                 "I don't participate in this Transaction",
-            )))
+            ))))
         }
     }
 }

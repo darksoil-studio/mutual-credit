@@ -5731,6 +5731,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tests"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "derive_more",
+ "futures",
+ "hdk",
+ "holochain",
+ "serde",
+ "tokio",
+ "transaction_requests_integrity",
+ "transactions_integrity",
+]
+
+[[package]]
 name = "textwrap"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6110,6 +6125,7 @@ dependencies = [
  "serde",
  "tokio",
  "transaction_requests_integrity",
+ "transactions_integrity",
 ]
 
 [[package]]
@@ -6117,7 +6133,9 @@ name = "transaction_requests_integrity"
 version = "0.0.1"
 dependencies = [
  "hdi",
+ "hdk",
  "serde",
+ "transactions_integrity",
 ]
 
 [[package]]
@@ -6130,6 +6148,7 @@ dependencies = [
  "holochain",
  "serde",
  "tokio",
+ "transaction_requests_integrity",
  "transactions_integrity",
 ]
 
@@ -6138,6 +6157,7 @@ name = "transactions_integrity"
 version = "0.0.1"
 dependencies = [
  "hdi",
+ "hdk",
  "serde",
 ]
 

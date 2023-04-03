@@ -12,8 +12,8 @@ hdk = { workspace = true }
 
 serde = { workspace = true }
 
-transaction_requests_integrity = { workspace = true } 
-
+transaction_requests_integrity = { workspace = true }
+transactions_integrity = { workspace = true }
 
 [dev-dependencies]
 fixt = "0.1.0"

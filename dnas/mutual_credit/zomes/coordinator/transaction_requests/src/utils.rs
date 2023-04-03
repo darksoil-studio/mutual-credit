@@ -1,15 +1,16 @@
-use hc_zome_transaction_requests_integrity::{call_transactions, TransactionRequest};
-use hc_zome_transactions_integrity::Transaction;
+use transaction_requests_integrity::{call_transactions, TransactionRequest};
+use transactions_integrity::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-pub fn build_transaction(transaction_request_element: Element) -> ExternResult<Transaction> {
-    let transaction_request: TransactionRequest = transaction_request_element
+pub fn build_transaction(transaction_request_record: Record) -> ExternResult<Transaction> {
+    let transaction_request: TransactionRequest = transaction_request_record
         .entry()
-        .to_app_option()?
-        .ok_or(WasmError::Guest(String::from(
+        .to_app_option()
+        .map_err(|e| wasm_error!(WasmErrorInner::Guest(format!("Failed to convert entry to app option: {}", e))))?
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
             "Malformed transaction_request",
-        )))?;
+        ))))?;
 
     let spender = transaction_request.spender_pub_key.clone();
     let recipient = transaction_request.recipient_pub_key.clone();
@@ -23,13 +24,14 @@ pub fn build_transaction(transaction_request_element: Element) -> ExternResult<T
         spender_latest_transaction,
         recipient_latest_transaction,
         transaction_request.amount,
-        SerializedBytes::try_from(transaction_request_element.header_address())?,
+        SerializedBytes::try_from(transaction_request_record.action_address())
+            .map_err(|e| wasm_error!(format!("Failed to serialize transaction request record: {}", e)))?,
     )?;
     Ok(transaction)
 }
 
 fn get_latest_transaction_for_agent(
-    agent_pub_key: AgentPubKeyB64,
-) -> ExternResult<Option<(HeaderHashB64, Transaction)>> {
+    agent_pub_key: AgentPubKey,
+) -> ExternResult<Option<(ActionHash, Transaction)>> {
     call_transactions("get_latest_transaction_for_agent".into(), agent_pub_key)
 }

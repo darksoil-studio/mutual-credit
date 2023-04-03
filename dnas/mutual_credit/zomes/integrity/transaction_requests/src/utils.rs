@@ -8,7 +8,7 @@ where
 {
     let response = call(
         CallTargetCell::Local,
-        "transactions".into(),
+        ZomeName::from("transactions"),
         fn_name.into(),
         None,
         payload,
@@ -16,13 +16,14 @@ where
 
     let result = match response {
         ZomeCallResponse::Ok(result) => Ok(result),
-        _ => Err(WasmError::Guest(format!(
+        _ => Err(wasm_error!(WasmErrorInner::Guest(format!(
             "Error creating the transaction: {:?}",
             response
-        ))),
+        )))),
     }?;
 
-    let transaction_hash: R = result.decode()?;
+    let transaction_hash: R = result.decode()
+        .map_err(|e| wasm_error!(WasmErrorInner::Guest(format!("Failed to decode transaction hash: {}", e))))?;
 
     Ok(transaction_hash)
 }

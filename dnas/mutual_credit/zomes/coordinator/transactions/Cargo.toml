@@ -12,7 +12,8 @@ hdk = { workspace = true }
 
 serde = { workspace = true }
 
-transactions_integrity = { workspace = true } 
+transactions_integrity = { workspace = true }
+transaction_requests_integrity = { workspace = true }
 
 
 [dev-dependencies]
