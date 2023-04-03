@@ -1,0 +1,7 @@
+---
+manifest_version: "1"
+name: mututal-credit
+ui:
+  bundled: "../ui/dist.zip"
+happ_manifest:
+  bundled: "./mututal-credit.happ"
