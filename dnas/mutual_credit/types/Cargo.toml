@@ -1,15 +1,13 @@
 [package]
-name = "transactions_integrity"
+name = "transaction_types"
 version = "0.0.1"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "transactions_integrity"
+name = "transaction_types"
 
 [dependencies]
-transaction_types = { workspace = true }
-
 hdi = { workspace = true }
 hdk = { workspace = true }
 

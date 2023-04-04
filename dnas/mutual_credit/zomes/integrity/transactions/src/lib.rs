@@ -1,4 +1,4 @@
-mod entry;
+use transaction_types::*;
 mod types;
 
 pub use entry::*;

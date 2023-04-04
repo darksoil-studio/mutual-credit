@@ -1,4 +1,4 @@
-use transactions_integrity::Transaction;
+use transaction_types::Transaction;
 use hdk::prelude::*;
 
 use super::common::create_transaction;

@@ -1,4 +1,5 @@
-use transactions_integrity::{AttemptCreateTransactionInput, Transaction, UnitEntryTypes};
+use transactions_integrity::{AttemptCreateTransactionInput, UnitEntryTypes};
+use transaction_types::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 

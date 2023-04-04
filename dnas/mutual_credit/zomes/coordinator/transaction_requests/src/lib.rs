@@ -1,12 +1,10 @@
 use hdk::prelude::*;
 
-use transaction_requests_integrity::*;
-
 mod handlers;
 mod utils;
 
 pub use handlers::*;
-use transaction_requests_integrity::TransactionRequest;
+use transaction_types::TransactionRequest;
 
 
 #[hdk_extern]

@@ -1,5 +1,5 @@
-use transaction_requests_integrity::{call_transactions, TransactionRequest};
-use transactions_integrity::Transaction;
+use transaction_requests_integrity::call_transactions;
+use transaction_types::{Transaction,TransactionRequest};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 

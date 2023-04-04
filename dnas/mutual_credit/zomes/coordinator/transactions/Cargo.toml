@@ -14,7 +14,7 @@ serde = { workspace = true }
 
 transactions_integrity = { workspace = true }
 transaction_requests_integrity = { workspace = true }
-
+transaction_types = { workspace = true }
 
 [dev-dependencies]
 fixt = "0.1.0"

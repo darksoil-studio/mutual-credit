@@ -11,6 +11,7 @@ serde = "1"
 
 transaction_requests_integrity = { workspace = true }
 transactions_integrity = { workspace = true }
+transaction_types = { workspace = true }
 
 [dev-dependencies]
 futures = {version = "0.3.1", default-features = false}

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use transaction_requests_integrity::*;
-use transactions_integrity::*;
+use transaction_types::{Transaction, TransactionRequest, TransactionRequestType};
 use hdk::prelude::holo_hash::*;
 
 use holochain::test_utils::consistency_10s;

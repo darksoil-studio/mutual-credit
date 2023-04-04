@@ -1,6 +1,6 @@
 use hdk::prelude::*;
 
-use transactions_integrity::Transaction;
+use transaction_types::Transaction;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum SignalType {

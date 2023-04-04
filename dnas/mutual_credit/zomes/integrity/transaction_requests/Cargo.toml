@@ -10,6 +10,7 @@ name = "transaction_requests_integrity"
 [dependencies]
 
 transactions_integrity = { workspace = true }
+transaction_types = { workspace = true }
 
 hdi = { workspace = true }
 hdk = { workspace = true }

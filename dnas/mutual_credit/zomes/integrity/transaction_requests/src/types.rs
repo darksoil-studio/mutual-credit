@@ -1,7 +1,7 @@
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-use crate::TransactionRequestType;
+use transaction_types::TransactionRequestType;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]

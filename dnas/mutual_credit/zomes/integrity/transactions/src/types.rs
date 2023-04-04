@@ -1,6 +1,6 @@
 use hdk::prelude::*;
 
-use crate::Transaction;
+use transaction_types::Transaction;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AttemptCreateTransactionInput {

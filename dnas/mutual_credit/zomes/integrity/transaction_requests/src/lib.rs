@@ -1,4 +1,3 @@
-mod entry;
 pub mod signals;
 pub mod types;
 pub mod utils;
@@ -8,6 +7,7 @@ pub use types::*;
 pub use utils::*;
 
 use hdi::prelude::*;
+use transaction_types::TransactionRequest;
 
 
 #[derive(Serialize, Deserialize)]

@@ -5742,6 +5742,7 @@ dependencies = [
  "serde",
  "tokio",
  "transaction_requests_integrity",
+ "transaction_types",
  "transactions_integrity",
 ]
 
@@ -6125,6 +6126,7 @@ dependencies = [
  "serde",
  "tokio",
  "transaction_requests_integrity",
+ "transaction_types",
  "transactions_integrity",
 ]
 
@@ -6135,7 +6137,17 @@ dependencies = [
  "hdi",
  "hdk",
  "serde",
+ "transaction_types",
  "transactions_integrity",
+]
+
+[[package]]
+name = "transaction_types"
+version = "0.0.1"
+dependencies = [
+ "hdi",
+ "hdk",
+ "serde",
 ]
 
 [[package]]
@@ -6149,6 +6161,7 @@ dependencies = [
  "serde",
  "tokio",
  "transaction_requests_integrity",
+ "transaction_types",
  "transactions_integrity",
 ]
 
@@ -6159,6 +6172,7 @@ dependencies = [
  "hdi",
  "hdk",
  "serde",
+ "transaction_types",
 ]
 
 [[package]]
