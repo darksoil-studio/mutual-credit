@@ -1,8 +1,7 @@
 use std::collections::BTreeMap;
 
 use transaction_requests_integrity::{call_transactions, CreateTransactionRequestInput};
-use transactions_integrity::AttemptCreateTransactionInput;
-use transaction_types::Transaction;
+use transaction_types::{Transaction, AttemptCreateTransactionInput};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 use transaction_requests_integrity::{LinkTypes, EntryTypes};

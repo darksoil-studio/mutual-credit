@@ -1,6 +1,14 @@
 use hdi::prelude::*;
 use hdk::prelude::*;
 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AttemptCreateTransactionInput {
+    pub transaction: Transaction,
+    pub counterparty_chain_top: ActionHash,
+}
+
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionParty {
@@ -145,3 +153,4 @@ pub enum TransactionRequestType {
     Send,
     Receive,
 }
+

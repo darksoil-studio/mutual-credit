@@ -1,8 +1,6 @@
 use transaction_types::*;
-mod types;
 
 pub use entry::*;
-pub use types::*;
 
 use hdi::prelude::*;
 
