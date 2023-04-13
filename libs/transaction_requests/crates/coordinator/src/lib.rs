@@ -1,0 +1,47 @@
+use hdk::prelude::*;
+
+mod handlers;
+mod utils;
+
+pub use handlers::*;
+use hc_zome_mutual_credit_transaction_requests_integrity::TransactionRequest;
+
+#[hdk_extern]
+pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let mut functions = BTreeSet::new();
+    functions.insert((zome_info()?.name, "recv_remote_signal".into()));
+
+    let grant = ZomeCallCapGrant {
+        access: CapAccess::Unrestricted,
+        functions: GrantedFunctions::Listed(functions),
+        tag: "".into(),
+    };
+    create_cap_grant(grant)?;
+
+    Ok(InitCallbackResult::Pass)
+}
+
+#[hdk_extern]
+fn recv_remote_signal(signal: SerializedBytes) -> ExternResult<()> {
+    emit_signal(&signal)?;
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum SignalType {
+    TransactionRequestReceived {
+        transaction_request_hash: ActionHash,
+        transaction_request: TransactionRequest,
+    },
+    TransactionRequestAccepted {
+        transaction_request_hash: ActionHash,
+        transaction: Record,
+    },
+    TransactionRequestCancelled {
+        transaction_request_hash: ActionHash,
+    },
+    TransactionRequestRejected {
+        transaction_request_hash: ActionHash,
+    },
+}

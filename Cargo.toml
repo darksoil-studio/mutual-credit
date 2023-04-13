@@ -5,30 +5,21 @@ opt-level = "z"
 opt-level = "z"
 
 [workspace]
-members = ["dnas/*/zomes/coordinator/*", "dnas/*/zomes/integrity/*", "tests"]
+members = [
+  "dnas/*/zomes/coordinator/*",
+  "dnas/*/zomes/integrity/*",
+  "tests",
+  "libs/*/crates/*",
+]
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "=0.2.1"
-hdk = "=0.1.1"
+hdi = "0.2"
+hdk = "0.1"
 holochain = "0.1.3"
 serde = "1"
-transaction_types = { path = "./dnas/mutual_credit/types" }
-
-[workspace.dependencies.profiles]
-path = "dnas/mutual_credit/zomes/coordinator/profiles"
-
-[workspace.dependencies.profiles_integrity]
-path = "dnas/mutual_credit/zomes/integrity/profiles"
-
-[workspace.dependencies.transaction_requests]
-path = "dnas/mutual_credit/zomes/coordinator/transaction_requests"
-
-[workspace.dependencies.transaction_requests_integrity]
-path = "dnas/mutual_credit/zomes/integrity/transaction_requests"
-
-[workspace.dependencies.transactions]
-path = "dnas/mutual_credit/zomes/coordinator/transactions"
-
-[workspace.dependencies.transactions_integrity]
-path = "dnas/mutual_credit/zomes/integrity/transactions"
+hc_zome_mutual_credit_transactions_types = { path = "./libs/transactions/crates/types" }
+hc_zome_mutual_credit_transactions_integrity = { path = "./libs/transactions/crates/integrity" }
+hc_zome_mutual_credit_transactions_coordinator = { path = "./libs/transactions/crates/coordinator" }
+hc_zome_mutual_credit_transaction_requests_integrity = { path = "./libs/transaction_requests/crates/integrity" }
+hc_zome_mutual_credit_transaction_requests_coordinator = { path = "./libs/transaction_requests/crates/coordinator" }

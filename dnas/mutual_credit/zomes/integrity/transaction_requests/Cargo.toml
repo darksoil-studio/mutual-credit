@@ -9,8 +9,7 @@ name = "transaction_requests_integrity"
 
 [dependencies]
 
-transactions_integrity = { workspace = true }
-transaction_types = { workspace = true }
+hc_zome_mutual_credit_transaction_requests_integrity = { workspace = true }
 
 hdi = { workspace = true }
 hdk = { workspace = true }

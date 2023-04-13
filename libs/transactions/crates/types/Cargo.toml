@@ -1,15 +1,13 @@
 [package]
-name = "transactions_integrity"
+name = "hc_zome_mutual_credit_transactions_types"
 version = "0.0.1"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "transactions_integrity"
+name = "hc_zome_mutual_credit_transactions_types"
 
 [dependencies]
-hc_zome_mutual_credit_transactions_integrity = { workspace = true }
-
 hdi = { workspace = true }
 hdk = { workspace = true }
 

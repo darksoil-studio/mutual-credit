@@ -2,17 +2,17 @@
   "name": "mututal-credit-dev",
   "private": true,
   "workspaces": [
-    "ui/lib",
-    "ui/app",
-    "ui/applet"
+    "libs/transactions/ui",
+    "libs/transactions_requests/ui",
+    "applet"
   ],
   "scripts": {
     "start": "AGENTS=2 npm run network:app",
     "start:applet": "AGENTS=2 npm run network:applet",
-    "network:app": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch -w lib\" \"npm start -w app\" \"npm run launch\" \"holochain-playground\"",
-    "network:applet": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch -w lib\" \"npm start -w applet\" \"npm run launch\" \"holochain-playground\"",
-    "package:app": "npm run build:happ && npm run build -w lib && npm run package -w app",
-    "package:applet": "npm run build:happ && npm run build -w lib && npm run package -w applet",
+    "network:app": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch -w @darksoil/mutual-credit\" \"npm start -w app\" \"npm run launch\" \"holochain-playground\"",
+    "network:applet": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch -w @darksoil/mutual-credit\" \"npm start -w applet\" \"npm run launch\" \"holochain-playground\"",
+    "package:app": "npm run build:happ && npm run build -w @darksoil/mutual-credit && npm run package -w app",
+    "package:applet": "npm run build:happ && npm run build -w @darksoil/mutual-credit && npm run package -w applet",
     "test": "npm run build:happ && RUSTFLAGS='' cargo nextest run -j 1",
     "launch": "echo \"pass\" | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/mututal-credit.happ --ui-port $UI_PORT network mdns",
     "build:happ": "npm run build:zomes && hc app pack workdir --recursive",

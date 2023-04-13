@@ -1,18 +1,19 @@
 [package]
-name = "transaction_requests"
+name = "hc_zome_mutual_credit_transactions_coordinator"
 version = "0.0.1"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "transaction_requests"
+name = "hc_zome_mutual_credit_transactions_coordinator"
 
 [dependencies]
 hdk = { workspace = true }
 
 serde = { workspace = true }
 
-hc_zome_mutual_credit_transaction_requests_coordinator = { workspace = true }
+hc_zome_mutual_credit_transactions_integrity = { workspace = true }
+hc_zome_mutual_credit_transactions_types = { workspace = true }
 
 [dev-dependencies]
 fixt = "0.1.0"
