@@ -1,4 +1,8 @@
-import { createContext } from "@lit-labs/context";
-import { MutualCreditStore } from "./mutual-credit-store";
+import { createContext } from '@lit-labs/context';
 
-export const mutualCreditStoreContext = createContext<MutualCreditStore>("hc_zome_mutual_credit_transaction_requests/store");
+import { TransactionRequestsStore } from './transaction-requests-store.js';
+
+export const transactionRequestsStoreContext =
+  createContext<TransactionRequestsStore>(
+    'hc_zome_mutual_credit_transaction_requests/store'
+  );

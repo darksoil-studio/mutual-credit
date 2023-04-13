@@ -5,7 +5,6 @@ publish = false
 version = "0.0.1"
 
 [dependencies]
-chrono = { version = "0.4", features = ["serde"] }
 derive_more = "0"
 serde = "1"
 
@@ -16,7 +15,7 @@ hc_zome_mutual_credit_transactions_types = { workspace = true }
 
 [dev-dependencies]
 futures = { version = "0.3.1", default-features = false }
-hdk = { workspace = true, features = ["encoding", "test_utils"] }
+hdk = { workspace = true, features = ["test_utils"] }
 holochain = { workspace = true, default-features = false, features = [
   "test_utils",
 ] }

@@ -14,15 +14,12 @@ pub enum TransactionRequestType {
     Receive,
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(tag = "type")]
 #[hdk_entry_defs]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     TransactionRequest(TransactionRequest),
 }
 
-#[derive(Serialize, Deserialize)]
 #[hdk_link_types]
 pub enum LinkTypes {
     AgentToTransactionRequest,

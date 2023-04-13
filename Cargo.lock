@@ -5790,7 +5790,6 @@ dependencies = [
 name = "tests"
 version = "0.0.1"
 dependencies = [
- "chrono",
  "derive_more",
  "futures",
  "hc_zome_mutual_credit_transaction_requests_coordinator",

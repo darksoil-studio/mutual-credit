@@ -1,7 +1,17 @@
-import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
+import {
+  CountersignedEntryRecord,
+  EntryRecord,
+  ZomeClient,
+} from '@holochain-open-dev/utils';
 import { ActionHash, AgentPubKey, AppAgentClient } from '@holochain/client';
 import { Transaction } from '@darksoil/mutual-credit-transactions';
-import { TransactionRequestsSignal, TransactionRequestType } from './types';
+
+import {
+  TransactionRequest,
+  TransactionRequestsSignal,
+  TransactionRequestType,
+} from './types';
+import { lazyLoadAndPoll } from '@holochain-open-dev/stores';
 
 export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSignal> {
   constructor(
@@ -26,8 +36,14 @@ export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSig
 
   async acceptTransactionRequest(
     transactionRequestHash: ActionHash
-  ): Promise<EntryRecord<Transaction>> {
+  ): Promise<CountersignedEntryRecord<Transaction>> {
     return this.callZome('accept_transaction_request', transactionRequestHash);
+  }
+
+  async getMyTransactionRequests(): Promise<
+    Array<EntryRecord<TransactionRequest>>
+  > {
+    return this.callZome('get_my_transaction_requests', null);
   }
   /* 
   async cancelOffer(offerHash: string) {

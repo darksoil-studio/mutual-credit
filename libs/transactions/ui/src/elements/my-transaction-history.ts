@@ -8,16 +8,16 @@ import { localized, msg } from '@lit/localize';
 import { transactionsStoreContext } from '../context';
 import { consume } from '@lit-labs/context';
 import {
-  CountersignedEntryRecord,
-  TransactionsStore,
-} from '../transactions-store';
-import {
   asyncDerived,
   asyncDeriveStore,
   StoreSubscriber,
 } from '@holochain-open-dev/stores';
 import { Transaction } from '../types';
-import { AgentPubKeyMap, EntryRecord } from '@holochain-open-dev/utils';
+import {
+  AgentPubKeyMap,
+  CountersignedEntryRecord,
+  EntryRecord,
+} from '@holochain-open-dev/utils';
 import {
   Profile,
   ProfilesStore,
@@ -26,6 +26,7 @@ import {
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 import { mdiCallMade, mdiCallReceived } from '@mdi/js';
 
+import { TransactionsStore } from '../transactions-store.js';
 import { counterparty, isOutgoing } from '../utils.js';
 
 @localized()

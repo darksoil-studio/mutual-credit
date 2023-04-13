@@ -12,7 +12,7 @@ export interface TransactionRequest {
 export type TransactionRequestsSignal =
   | {
       type: 'TransactionRequestReceived';
-      transaction_request: TransactionRequest;
+      transaction_request: Record;
     }
   | {
       type: 'TransactionRequestAccepted';
