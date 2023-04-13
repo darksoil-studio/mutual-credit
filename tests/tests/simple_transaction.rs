@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use hc_zome_transaction_requests_integrity::*;
-use hc_zome_transactions_integrity::*;
+use transaction_requests_integrity::*;
+use transaction_types::{Transaction, TransactionRequest, TransactionRequestType};
 use hdk::prelude::holo_hash::*;
 
 use holochain::test_utils::consistency_10s;
@@ -30,25 +30,25 @@ async fn simple_transaction() {
     println!("Alice {}", alice.agent_pubkey());
     println!("Bob {}", bobbo.agent_pubkey());
 
-    consistency_10s(&[&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
 
-    let map: BTreeMap<HeaderHashB64, Transaction> = conductors[0]
+    let map: BTreeMap<ActionHash, Transaction> = conductors[0]
         .call(&alice_transactions, "query_my_transactions", ())
         .await;
     assert_eq!(map.len(), 0);
 
-    let map: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
+    let map: BTreeMap<ActionHash, Transaction> = conductors[1]
         .call(&bob_transactions, "query_my_transactions", ())
         .await;
     assert_eq!(map.len(), 0);
 
     let transaction_request_input = CreateTransactionRequestInput {
         transaction_request_type: TransactionRequestType::Send,
-        counterparty_pub_key: AgentPubKeyB64::from(bobbo.agent_pubkey().clone()),
+        counterparty_pub_key: bobbo.agent_pubkey().clone(),
         amount: 10.0,
     };
 
-    let (transaction_request_hash, _): (HeaderHashB64, TransactionRequest) = conductors[0]
+    let (transaction_request_hash, _): (ActionHash, TransactionRequest) = conductors[0]
         .call(
             &alice_transaction_requests,
             "create_transaction_request",
@@ -56,9 +56,9 @@ async fn simple_transaction() {
         )
         .await;
 
-    consistency_10s(&[&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
 
-    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[0]
+    let transaction_requests: BTreeMap<ActionHash, TransactionRequest> = conductors[0]
         .call(
             &alice_transaction_requests,
             "get_my_transaction_requests",
@@ -68,13 +68,13 @@ async fn simple_transaction() {
 
     assert_eq!(transaction_requests.len(), 1);
 
-    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[1]
+    let transaction_requests: BTreeMap<ActionHash, TransactionRequest> = conductors[1]
         .call(&bob_transaction_requests, "get_my_transaction_requests", ())
         .await;
 
     assert_eq!(transaction_requests.len(), 1);
 
-    let _txn: (HeaderHashB64, Transaction) = conductors[1]
+    let _txn: (ActionHash, Transaction) = conductors[1]
         .call(
             &bob_transaction_requests,
             "accept_transaction_request",
@@ -82,23 +82,23 @@ async fn simple_transaction() {
         )
         .await;
 
-    consistency_10s(&[&alice, &bobbo]).await;
-    consistency_10s(&[&alice, &bobbo]).await;
-    consistency_10s(&[&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
 
-    let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[0]
+    let transactions: BTreeMap<ActionHash, Transaction> = conductors[0]
         .call(&alice_transactions, "query_my_transactions", ())
         .await;
     assert_eq!(transactions.len(), 1);
     assert_eq!(transactions.into_iter().next().unwrap().1.amount, 10.0);
 
-    let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
+    let transactions: BTreeMap<ActionHash, Transaction> = conductors[1]
         .call(&bob_transactions, "query_my_transactions", ())
         .await;
     assert_eq!(transactions.len(), 1);
     assert_eq!(transactions.into_iter().next().unwrap().1.amount, 10.0);
 
-    let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[0]
+    let transactions: BTreeMap<ActionHash, Transaction> = conductors[0]
         .call(
             &alice_transactions,
             "get_transactions_for_agent",
@@ -107,7 +107,7 @@ async fn simple_transaction() {
         .await;
     assert_eq!(transactions.len(), 1);
 
-    let transactions: BTreeMap<HeaderHashB64, Transaction> = conductors[1]
+    let transactions: BTreeMap<ActionHash, Transaction> = conductors[1]
         .call(
             &bob_transactions,
             "get_transactions_for_agent",
@@ -116,7 +116,7 @@ async fn simple_transaction() {
         .await;
     assert_eq!(transactions.len(), 1);
 
-    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[0]
+    let transaction_requests: BTreeMap<ActionHash, TransactionRequest> = conductors[0]
         .call(
             &alice_transaction_requests,
             "get_my_transaction_requests",
@@ -126,7 +126,7 @@ async fn simple_transaction() {
 
     assert_eq!(transaction_requests.len(), 1);
 
-    let transaction_requests: BTreeMap<HeaderHashB64, TransactionRequest> = conductors[1]
+    let transaction_requests: BTreeMap<ActionHash, TransactionRequest> = conductors[1]
         .call(&bob_transaction_requests, "get_my_transaction_requests", ())
         .await;
 

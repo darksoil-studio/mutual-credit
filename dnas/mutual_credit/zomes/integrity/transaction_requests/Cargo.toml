@@ -1,0 +1,18 @@
+[package]
+name = "transaction_requests_integrity"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "transaction_requests_integrity"
+
+[dependencies]
+
+transactions_integrity = { workspace = true }
+transaction_types = { workspace = true }
+
+hdi = { workspace = true }
+hdk = { workspace = true }
+
+serde = { workspace = true }

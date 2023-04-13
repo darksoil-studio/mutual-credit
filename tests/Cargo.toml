@@ -9,11 +9,12 @@ chrono = {version = "0.4", features = ["serde"]}
 derive_more = "0"
 serde = "1"
 
-hc_zome_transaction_requests_integrity = {path = "../libs/transaction_requests/zomes/integrity"}
-hc_zome_transactions_integrity = {path = "../libs/transactions/zomes/integrity"}
+transaction_requests_integrity = { workspace = true }
+transactions_integrity = { workspace = true }
+transaction_types = { workspace = true }
 
 [dev-dependencies]
 futures = {version = "0.3.1", default-features = false}
-hdk = {version = "0.0.127", features = ["encoding", "test_utils"]}
-holochain = {version = "0.0.132", default-features = false, features = ["test_utils"]}
+hdk = { workspace = true, features = ["encoding", "test_utils"]}
+holochain = { workspace = true, default-features = false, features = ["test_utils"]}
 tokio = {version = "1.3", features = ["full"]}

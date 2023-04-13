@@ -1,0 +1,18 @@
+---
+manifest_version: "1"
+name: mututal-credit
+description: ~
+roles:
+  - name: mutual_credit
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "../dnas/mutual_credit/workdir/mutual_credit.dna"
+      modifiers:
+        network_seed: ~
+        properties: ~
+        origin_time: ~
+        quantum_time: ~
+      version: ~
+      clone_limit: 0
