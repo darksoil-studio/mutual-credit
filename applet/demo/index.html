@@ -10,32 +10,92 @@
     </style>
   </head>
   <body>
+    <mutual-credit-demo></mutual-credit-demo>
     <script type="module">
+      import { render, html } from 'lit';
       import { AppWebsocket, AdminWebsocket } from '@holochain/client';
       import Applet from './src/index.ts';
-
-      const element = document.getElementById('hi');
+      import '@darksoil/mutual-credit-transactions/dist/elements/my-transaction-history.js';
+      import '@darksoil/mutual-credit-transactions/dist/elements/my-balance.js';
+      import '@darksoil/mutual-credit-transaction-requests/dist/elements/create-transaction-request.js';
+      import '@darksoil/mutual-credit-transaction-requests/dist/elements/pending-transaction-requests.js';
+      import '@darksoil/mutual-credit-transaction-requests/dist/elements/transaction-request-detail.js';
+      import {
+        TransactionsStore,
+        TransactionsClient,
+      } from '@darksoil/mutual-credit-transactions';
+      import {
+        TransactionRequestsStore,
+        TransactionRequestsClient,
+      } from '@darksoil/mutual-credit-transaction-requests';
 
       async function setup() {
-        const appWs = await AppWebsocket.connect(
-          `ws://localhost:${process.env.HC_PORT}`
-        );
-        const adminWs = await AdminWebsocket.connect(
-          `ws://localhost:${process.env.ADMIN_PORT}`
-        );
+        const appAgentWs = await AppAgentWebsocket.connect('');
 
-        const appInfo = await appWs.appInfo({
-          installed_app_id: 'notebooks',
-        });
-
-        Applet.groupViews(
-          appWs,
-          adminWs,
-          { profilesStore: null },
-          appInfo
-        ).full(element, customElements);
+        render(html``, document.getElementById('demo'));
       }
       setup();
+      class ProfilesTest extends LitElement {
+        static get properties() {
+          return {
+            loaded: {
+              type: Boolean,
+            },
+            selectedTransactionRequest: {
+              type: Object,
+            },
+          };
+        }
+
+        async firstUpdated() {
+          const client = await AppAgentWebsocket.connect('', 'test-app');
+
+          const service = new ProfilesClient(client, 'mutual_credit');
+
+          this.store = new ProfilesStore(service);
+          this.transactionRequestsStore = new TransactionRequestsStore(
+            new TransactionRequestsClient(client, 'mutual_credit')
+          );
+          this.transactionsStore = new TransactionsStore(
+            new TransactionsClient(client, 'mutual_credit')
+          );
+          this.loaded = true;
+        }
+
+        render() {
+          if (!this.loaded) return html`<span>Loading...</span>`;
+          return html`
+            <profiles-context .store=${this.profilesStore}>
+              <transaction-requests-context
+                .store=${this.transactionRequestsStore}
+              >
+                <transactions-context .store=${this.transactionsStore}>
+                  <profile-prompt>
+                    <create-transaction-request></create-transaction-request>
+                    <pending-transaction-requests
+                      @transaction-request-selected=${e =>
+                        (this.selectedTransactionRequest =
+                          e.detail.transactionRequestHash)}
+                    ></pending-transaction-requests>
+                    ${this.selectedTransactionRequest
+                      ? html`
+                          <transaction-request-detail
+                            .transactionRequestHash=${this
+                              .selectedTransactionRequest}
+                          ></transaction-request-detail>
+                        `
+                      : html``}
+                    <my-transaction-history></my-transaction-history>
+                    <my-balance></my-balance>
+                  </profile-prompt>
+                </transactions-context>
+              </transaction-requests-context>
+            </profiles-context>
+          `;
+        }
+      }
+
+      customElements.define('mutual-credit-demo', MutualCreditDemo);
     </script>
   </body>
 </html>

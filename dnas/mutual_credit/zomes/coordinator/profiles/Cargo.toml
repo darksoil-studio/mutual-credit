@@ -11,4 +11,4 @@ name = "profiles"
 hdk = { workspace = true }
 
 serde = { workspace = true }
-hc_zome_profiles_coordinator = "0.1.2"
+hc_zome_profiles_coordinator = "0.1"

@@ -50,7 +50,7 @@ pub fn create_transaction_request(input: CreateTransactionRequestInput) -> Exter
     create_link(
         get_counterparty(&transaction_request)?,
         action_hash.clone(),
-        LinkTypes::CounterpartyToTransactionRequest,
+        LinkTypes::AgentToTransactionRequest,
         (),
     )?;
 
@@ -289,7 +289,7 @@ pub fn clean_transaction_requests(_: ()) -> ExternResult<()> {
             create_link(
                 transaction_request_hash.clone(),
                 transaction_record.action_address().clone(),
-                LinkTypes::RequestToTransactionAction,
+                LinkTypes::TransactionRequestToTransaction,
                 (),
             )?;
         }

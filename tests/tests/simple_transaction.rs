@@ -129,13 +129,31 @@ async fn simple_transaction() {
         )
         .await;
 
-    assert_eq!(transaction_requests.len(), 0);
+    assert_eq!(transaction_requests.len(), 1);
 
     let transaction_requests: Vec<ActionHash> = conductors[1]
         .call(
             &bob_transaction_requests,
             "get_transaction_requests_for_agent",
             bobbo.agent_pubkey().clone(),
+        )
+        .await;
+
+    assert_eq!(transaction_requests.len(), 0);
+
+    let _response: () = conductors[0]
+        .call(
+            &alice_transaction_requests,
+            "clear_transaction_requests",
+            vec![transaction_request.action_address().clone()],
+        )
+        .await;
+
+    let transaction_requests: Vec<ActionHash> = conductors[0]
+        .call(
+            &alice_transaction_requests,
+            "get_transaction_requests_for_agent",
+            alice.agent_pubkey().clone(),
         )
         .await;
 

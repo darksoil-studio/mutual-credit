@@ -6,10 +6,10 @@ opt-level = "z"
 
 [workspace]
 members = [
-  "dnas/*/zomes/coordinator/*",
-  "dnas/*/zomes/integrity/*",
-  "tests",
   "libs/*/crates/*",
+  "dnas/*/zomes/integrity/*",
+  "dnas/*/zomes/coordinator/*",
+  "tests",
 ]
 resolver = "2"
 
