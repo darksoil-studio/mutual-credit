@@ -98,7 +98,7 @@ impl Transaction {
         let my_pub_key: AgentPubKey = agent_info()?.agent_initial_pubkey;
 
         if my_pub_key.eq(&self.spender.agent_pub_key) {
-            Ok(self.spender.clone())
+            Ok(self.recipient.clone())
         } else if my_pub_key.eq(&self.recipient.agent_pub_key) {
             Ok(self.spender.clone())
         } else {

@@ -22,7 +22,7 @@ pub fn create_transaction_request(input: CreateTransactionRequestInput) -> Exter
 
     if input.counterparty_pub_key.clone().eq(&my_pub_key) {
         return Err(wasm_error!(WasmErrorInner::Guest(String::from(
-            "An agent cannot create an offer to themselves",
+            "An agent cannot create an transaction request to themselves",
         ))));
     }
 
@@ -48,7 +48,7 @@ pub fn create_transaction_request(input: CreateTransactionRequestInput) -> Exter
         (),
     )?;
     create_link(
-        get_counterparty(&transaction_request)?,
+        input.counterparty_pub_key.clone(),
         action_hash.clone(),
         LinkTypes::AgentToTransactionRequest,
         (),
@@ -57,6 +57,11 @@ pub fn create_transaction_request(input: CreateTransactionRequestInput) -> Exter
     let record = get(action_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
         WasmErrorInner::Guest(String::from("Could not find the newly created Transaction"))
     ))?;
+    let signal = Signal::TransactionRequestCreated {
+        transaction_request: record.clone(),
+    };
+    emit_signal(signal.clone())?;
+    remote_signal(signal, vec![input.counterparty_pub_key])?;
 
     Ok(record)
 }
@@ -115,7 +120,7 @@ pub fn cancel_transaction_request(transaction_request_hash: ActionHash) -> Exter
     };
     emit_signal(signal.clone())?;
 
-    remote_signal(ExternIO::encode(signal), vec![counterparty])?;
+    remote_signal(signal, vec![counterparty])?;
 
     Ok(())
 }
@@ -149,7 +154,7 @@ pub fn reject_transaction_request(transaction_request_hash: ActionHash) -> Exter
     };
     emit_signal(signal.clone())?;
 
-    remote_signal(ExternIO::encode(signal), vec![counterparty])?;
+    remote_signal(signal, vec![counterparty])?;
 
     Ok(())
 }
@@ -192,7 +197,13 @@ pub fn accept_transaction_request(transaction_request_hash: ActionHash) -> Exter
 
 #[hdk_extern(infallible)]
 fn post_commit(actions: Vec<SignedActionHashed>) {
-    let my_transactions = query_my_transactions().unwrap();
+    if let Err(err) = inner_post_commit(actions) {
+        error!("Error executing post commit: {:?}", err);
+    }
+}
+
+fn inner_post_commit(actions: Vec<SignedActionHashed>) -> ExternResult<()> {
+    let my_transactions = query_my_transactions()?;
 
     let my_new_transactions: Vec<SignedActionHashed> = actions
         .into_iter()
@@ -203,63 +214,30 @@ fn post_commit(actions: Vec<SignedActionHashed>) {
                 .is_some()
         })
         .collect();
+    error!(
+        "Postcommig transaction_reqeuests {} {:?}",
+        my_new_transactions.len(),
+        agent_info()?.agent_latest_pubkey
+    );
 
     if my_new_transactions.len() > 0 {
-        let get_inputs = my_new_transactions
-            .into_iter()
-            .map(|h| GetInput::new(h.action_address().clone().into(), Default::default()))
-            .collect();
+        let result = call_remote(
+            agent_info()?.agent_initial_pubkey,
+            zome_info()?.name,
+            "clean_transaction_requests".into(),
+            None,
+            (),
+        );
 
-        let records: Vec<Record> = HDK
-            .with(|hdk| hdk.borrow().get(get_inputs))
-            .unwrap()
-            .into_iter()
-            .filter_map(|r| r)
-            .collect();
-
-        for transaction_record in records.clone() {
-            let transaction = Transaction::try_from(transaction_record.clone()).unwrap();
-
-            let transaction_request_hash = ActionHash::try_from(transaction.info).unwrap();
-
-            emit_signal(Signal::TransactionCompleted {
-                transaction_request_hash,
-                transaction: transaction_record,
-            })
-            .unwrap();
-        }
-
-        let transactions_i_created: Vec<Record> = records
-            .into_iter()
-            .filter(|record| match record.entry().as_option() {
-                Some(Entry::CounterSign(session_data, _entry_bytes)) => {
-                    let state = session_data
-                        .agent_state_for_agent(&agent_info().unwrap().agent_initial_pubkey)
-                        .unwrap();
-                    state.agent_index().to_owned() == 0
-                }
-                _ => false,
-            })
-            .collect();
-
-        if transactions_i_created.len() > 0 {
-            let result = call_remote(
-                agent_info().unwrap().agent_initial_pubkey,
-                zome_info().unwrap().name,
-                "clean_transaction_requests".into(),
-                None,
-                (),
-            );
-
-            match result.clone() {
-                Ok(ZomeCallResponse::Ok(_)) => {}
-                _ => error!(
-                    "Error trying to clean the transaction requests {:?}",
-                    result,
-                ),
-            };
-        }
+        match result.clone() {
+            Ok(ZomeCallResponse::Ok(_)) => {}
+            _ => error!(
+                "Error trying to clean the transaction requests {:?}",
+                result,
+            ),
+        };
     }
+    Ok(())
 }
 
 #[hdk_extern]
@@ -351,6 +329,21 @@ pub fn get_transaction_request(
             "Error fetching the details for the transaction request".to_string()
         ))),
     }
+}
+
+#[hdk_extern]
+pub fn get_transaction_for_transaction_request(
+    transaction_request_hash: ActionHash,
+) -> ExternResult<Option<ActionHash>> {
+    let links = get_links(
+        transaction_request_hash,
+        LinkTypes::TransactionRequestToTransaction,
+        None,
+    )?;
+
+    Ok(links
+        .first()
+        .map(|link| ActionHash::from(link.target.clone())))
 }
 
 fn get_chain_top(agent_pub_key: AgentPubKey) -> ExternResult<ActionHash> {

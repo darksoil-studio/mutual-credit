@@ -23,7 +23,7 @@ export interface TransactionRequestWithStatus {
 
 export type TransactionRequestsSignal =
   | {
-      type: 'TransactionRequestReceived';
+      type: 'TransactionRequestCreated';
       transaction_request: Record;
     }
   | {

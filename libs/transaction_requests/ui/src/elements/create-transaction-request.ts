@@ -1,7 +1,8 @@
 import { html, LitElement } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 
 import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/input/input.js';
 import '@shoelace-style/shoelace/dist/components/card/card.js';
 import '@shoelace-style/shoelace/dist/components/dialog/dialog.js';
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
@@ -31,6 +32,7 @@ export class CreateTransactionRequest extends LitElement {
   @query('#dialog')
   _dialog!: SlDialog;
 
+  @state()
   transactionRequestInput:
     | {
         counterparty: AgentPubKey;
@@ -39,7 +41,11 @@ export class CreateTransactionRequest extends LitElement {
       }
     | undefined;
 
+  @state()
+  creating = false;
+
   async createTransactionRequest() {
+    this.creating = true;
     try {
       await this.transactionRequestsStore.client.createTransactionRequest(
         this.transactionRequestInput!.transactionRequestType === 'send'
@@ -59,34 +65,53 @@ export class CreateTransactionRequest extends LitElement {
           bubbles: true,
         })
       );
+      this._dialog.hide();
+      this.transactionRequestInput = undefined;
     } catch (e) {
       notifyError(msg('Error creating the transaction request'));
       console.error(e);
     }
+    this.creating = false;
   }
 
   renderConfirmDialog() {
     return html`
-      <sl-dialog id="dialog">
-        <span slot="headline">${msg('Confirm Transaction Request')}</span>
-        <span>
-          You are about to create an transaction request to
-          <agent-avatar
-            .agentPubKey=${this.transactionRequestInput?.counterparty}
-          ></agent-avatar
-          >. This would
-          ${this.transactionRequestInput?.transactionRequestType === 'send'
-            ? 'lower'
-            : 'raise'}
-          your balance by ${this.transactionRequestInput?.amount} and
-          ${this.transactionRequestInput?.transactionRequestType === 'send'
-            ? 'raise'
-            : 'lower'}
-          the agent receiving the request value by the same amount.
-        </span>
+      <sl-dialog id="dialog" .label=${msg('Confirm Transaction Request')}>
+        ${this.transactionRequestInput
+          ? html`
+              <span>
+                You are about to create an transaction request to
+                <agent-avatar
+                  .agentPubKey=${this.transactionRequestInput.counterparty}
+                ></agent-avatar
+                >. This would
+                ${this.transactionRequestInput.transactionRequestType === 'send'
+                  ? 'lower'
+                  : 'raise'}
+                your balance by ${this.transactionRequestInput.amount} and
+                ${this.transactionRequestInput.transactionRequestType === 'send'
+                  ? 'raise'
+                  : 'lower'}
+                the agent receiving the request by the same amount.
+              </span>
+            `
+          : html``}
 
-        <sl-button> ${msg('Cancel')} </sl-button>
-        <sl-button @click=${() => this.createTransactionRequest()}>
+        <sl-button
+          slot="footer"
+          @click=${() => {
+            this._dialog.hide();
+            this.transactionRequestInput = undefined;
+          }}
+        >
+          ${msg('Cancel')}
+        </sl-button>
+        <sl-button
+          slot="footer"
+          variant="primary"
+          @click=${() => this.createTransactionRequest()}
+          .loading=${this.creating}
+        >
           ${msg('Confirm')}
         </sl-button>
       </sl-dialog>
@@ -97,43 +122,57 @@ export class CreateTransactionRequest extends LitElement {
     return html`
       ${this.renderConfirmDialog()}
       <sl-card>
+        <span slot="header" class="title"
+          >${msg('Create Transaction Request')}</span
+        >
         <form
           class="column"
           ${onSubmit(f => {
             this.transactionRequestInput = {
-              amount: f.amount,
+              amount: parseFloat(f.amount),
               counterparty: f.counterparty,
               transactionRequestType: f['transaction-request-type'],
             };
             this._dialog.show();
           })}
         >
-          <span class="title" style="margin-bottom: 8px;"
-            >${msg('Create Transaction Request')}</span
+          <sl-select
+            name="transaction-request-type"
+            required
+            id="request-type"
+            value="send"
+            style="margin-bottom: 16px;"
+            @sl-change=${() => this.requestUpdate()}
           >
-
-          <sl-select name="transaction-request-type" required value="send">
             <sl-option value="send">${msg('Send')}</sl-option>
             <sl-option value="receive">${msg('Receive')}</sl-option>
           </sl-select>
 
-          <sl-textfield
-            style="padding-top: 16px; margin-bottom: 16px;"
+          <sl-input
+            style="margin-bottom: 16px;"
             .label=${msg('Amount')}
             type="number"
             name="amount"
             min="0.1"
             step="0.1"
+            value="1.0"
             required
-          ></sl-textfield>
+          ></sl-input>
 
           <search-agent
+            style="margin-bottom: 16px;"
             name="counterparty"
             required
-            .fieldLabel=${msg('Recipient')}
+            .fieldLabel=${(
+              this.shadowRoot?.getElementById('request-type') as any
+            )?.value === 'receive'
+              ? msg('From')
+              : msg('To')}
           ></search-agent>
 
-          <sl-button type="submit">${msg('Create Offer')}</sl-button>
+          <sl-button type="submit" variant="primary"
+            >${msg('Create Transaction Request')}</sl-button
+          >
         </form>
       </sl-card>
     `;

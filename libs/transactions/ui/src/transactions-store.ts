@@ -2,6 +2,7 @@ import { asyncDerived, asyncReadable } from '@holochain-open-dev/stores';
 import { CountersignedEntryRecord } from '@holochain-open-dev/utils';
 import { TransactionsClient } from './transactions-client';
 import { Transaction } from './types';
+import { isOutgoing } from './utils';
 
 export class TransactionsStore {
   constructor(public client: TransactionsClient) {}
@@ -23,6 +24,13 @@ export class TransactionsStore {
   );
 
   myBalance = asyncDerived(this.myTransactions, transactions =>
-    transactions.reduce((acc, t) => acc + t.entry.amount, 0)
+    transactions.reduce(
+      (acc, t) =>
+        acc +
+        (isOutgoing(this.client.appAgentClient.myPubKey, t.entry)
+          ? -t.entry.amount
+          : t.entry.amount),
+      0
+    )
   );
 }

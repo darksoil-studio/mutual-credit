@@ -87,7 +87,7 @@ export class MyTransactionHistory extends LitElement {
           (transaction, i) => html`
             <div class="row" style="align-items: center;">
               <sl-icon
-                .style="color: ${isOutgoing(
+                style="color: ${isOutgoing(
                   this.transactionsStore.client.appAgentClient.myPubKey,
                   transaction.entry
                 )
@@ -130,10 +130,6 @@ export class MyTransactionHistory extends LitElement {
                 ${msg('credits')}
               </span>
             </div>
-
-            ${i < myTransactions.length - 1
-              ? html`<li divider padded role="separator"></li> `
-              : html``}
           `
         )}
       </div>

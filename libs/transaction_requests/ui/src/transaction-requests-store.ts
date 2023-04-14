@@ -1,6 +1,19 @@
-import { asyncReadable } from '@holochain-open-dev/stores';
-import { EntryRecord, LazyHoloHashMap } from '@holochain-open-dev/utils';
+import {
+  Transaction,
+  TransactionsClient,
+} from '@darksoil/mutual-credit-transactions';
+import {
+  asyncDeriveStore,
+  asyncReadable,
+  retryUntilSuccess,
+} from '@holochain-open-dev/stores';
+import {
+  CountersignedEntryRecord,
+  EntryRecord,
+  LazyHoloHashMap,
+} from '@holochain-open-dev/utils';
 import { ActionHash, AgentPubKey } from '@holochain/client';
+import { decode } from '@msgpack/msgpack';
 import { TransactionRequestsClient } from './transaction-requests-client';
 import {
   TransactionRequest,
@@ -21,69 +34,107 @@ export function isOutgoing(
   myPubKey: AgentPubKey,
   transactionRequest: TransactionRequest
 ): boolean {
-  return transactionRequest.recipient_pub_key.toString() === myPubKey.toString()
+  return transactionRequest.spender_pub_key.toString() === myPubKey.toString()
     ? true
     : false;
 }
 
 export class TransactionRequestsStore {
-  constructor(public client: TransactionRequestsClient) {}
+  constructor(
+    public client: TransactionRequestsClient,
+    public transactionsClient: TransactionsClient
+  ) {}
 
   transactionRequests = new LazyHoloHashMap(
     (transactionRequestHash: ActionHash) =>
-      asyncReadable<TransactionRequestWithStatus | undefined>(async set => {
-        let transactionRequestDetails = await this.client.getTransactionRequest(
-          transactionRequestHash
-        );
-        if (!transactionRequestDetails) {
-          set(undefined);
-          return;
-        }
-        let transactionRequest = transactionRequestDetails.transaction_request;
-        let status: TransactionRequestStatus = 'pending';
-        if (transactionRequestDetails.deletes.length > 0) {
-          const deleteAuthor =
-            transactionRequestDetails.deletes[0].hashed.content.author;
+      asyncDeriveStore(
+        retryUntilSuccess(() =>
+          this.client.getTransactionRequest(transactionRequestHash)
+        ),
+        transactionRequestDetails =>
+          asyncReadable<TransactionRequestWithStatus | undefined>(async set => {
+            let transactionHash =
+              await this.client.getTransactionForTransactionRequest(
+                transactionRequestHash
+              );
 
-          if (
-            deleteAuthor.toString() ===
-            this.client.appAgentClient.myPubKey.toString()
-          ) {
-            status = 'cancelled';
-          } else {
-            status = 'rejected';
-          }
-        }
+            if (!transactionRequestDetails) {
+              set(undefined);
+              return;
+            }
+            let transactionRequest =
+              transactionRequestDetails.transaction_request;
+            let status: TransactionRequestStatus = 'pending';
+            if (transactionHash) {
+              status = 'completed';
+            } else if (transactionRequestDetails.deletes.length > 0) {
+              const deleteAuthor =
+                transactionRequestDetails.deletes[0].hashed.content.author;
 
-        set({ transactionRequest, status });
+              if (
+                deleteAuthor.toString() ===
+                transactionRequest.action.author.toString()
+              ) {
+                status = 'cancelled';
+              } else {
+                status = 'rejected';
+              }
+            }
 
-        return this.client.onSignal(signal => {
-          if (
-            signal.type === 'TransactionRequestReceived' ||
-            signal.transaction_request_hash.toString() !==
-              transactionRequestHash.toString()
-          )
-            return;
-          if (signal.type === 'TransactionCompleted') {
-            set({
-              transactionRequest: transactionRequest!,
-              status: 'completed',
+            set({ transactionRequest, status });
+
+            const unsubscribe1 = this.client.onSignal(signal => {
+              if (
+                signal.type === 'TransactionRequestCreated' ||
+                signal.transaction_request_hash.toString() !==
+                  transactionRequestHash.toString()
+              )
+                return;
+              if (signal.type === 'TransactionCompleted') {
+                set({
+                  transactionRequest: transactionRequest!,
+                  status: 'completed',
+                });
+              }
+              if (signal.type === 'TransactionRequestCancelled') {
+                set({
+                  transactionRequest: transactionRequest!,
+                  status: 'cancelled',
+                });
+              }
+              if (signal.type === 'TransactionRequestRejected') {
+                set({
+                  transactionRequest: transactionRequest!,
+                  status: 'rejected',
+                });
+              }
             });
-          }
-          if (signal.type === 'TransactionRequestCancelled') {
-            set({
-              transactionRequest: transactionRequest!,
-              status: 'cancelled',
+            const unsubscribe2 = this.transactionsClient.onSignal(signal => {
+              if (signal.type === 'NewTransactionCreated') {
+                const transaction = new CountersignedEntryRecord<Transaction>(
+                  signal.transaction
+                );
+                const transactionRequestHashInfo = decode(
+                  transaction.entry.info
+                ) as ActionHash;
+
+                if (
+                  transactionRequestHashInfo.toString() ===
+                  transactionRequestHash.toString()
+                ) {
+                  set({
+                    transactionRequest: transactionRequest!,
+                    status: 'completed',
+                  });
+                }
+              }
             });
-          }
-          if (signal.type === 'TransactionRequestRejected') {
-            set({
-              transactionRequest: transactionRequest!,
-              status: 'rejected',
-            });
-          }
-        });
-      })
+            return () => {
+              unsubscribe1();
+              unsubscribe2();
+            };
+          })
+      )
   );
 
   myTransactionRequests = asyncReadable<Array<ActionHash>>(async set => {
@@ -93,7 +144,7 @@ export class TransactionRequestsStore {
     set(transactionRequests);
 
     return this.client.onSignal(signal => {
-      if (signal.type === 'TransactionRequestReceived') {
+      if (signal.type === 'TransactionRequestCreated') {
         transactionRequests.push(
           signal.transaction_request.signed_action.hashed.hash
         );

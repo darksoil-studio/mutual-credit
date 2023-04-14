@@ -11,7 +11,7 @@ import { ActionHash } from '@holochain/client';
 import { consume } from '@lit-labs/context';
 import { localized, msg } from '@lit/localize';
 import { css, html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators';
+import { customElement, property } from 'lit/decorators.js';
 import { transactionRequestsStoreContext } from '../context';
 import {
   counterparty,
@@ -120,6 +120,37 @@ export class TransactionRequestDetail extends LitElement {
 
   /** Renders */
 
+  renderActions(transactionRequest: TransactionRequestWithStatus) {
+    if (transactionRequest.status === 'completed')
+      return html`<span
+        >${msg('This transaction request has already been completed')}</span
+      >`;
+
+    if (
+      transactionRequest.transactionRequest.action.author.toString() ===
+      this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
+    )
+      return html`
+        <sl-button @click=${() => this.cancelTransactionRequest()}>
+          ${msg('Cancel')}
+        </sl-button>
+        <sl-button variant="primary" disabled>
+          ${msg('Waiting for approval')}
+        </sl-button>
+      `;
+    return html`
+      <sl-button @click=${() => this.rejectTransactionRequest()}>
+        ${msg('Reject')}
+      </sl-button>
+      <sl-button
+        variant="primary"
+        @click=${() => this.acceptTransactionRequest()}
+      >
+        ${msg('Accept')}
+      </sl-button>
+    `;
+  }
+
   renderTransactionRequest(transactionRequest: TransactionRequestWithStatus) {
     return html`
       <div class="column">
@@ -135,30 +166,7 @@ export class TransactionRequestDetail extends LitElement {
           ${transactionRequest.transactionRequest.entry.amount} credits
         </span>
 
-        ${transactionRequest.transactionRequest.action.author.toString() ===
-        this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
-          ? html`
-              <sl-button
-                .label=${msg('Cancel')}
-                @click=${() => this.cancelTransactionRequest()}
-              ></sl-button>
-              <sl-button
-                variant="primary"
-                disabled
-                .label=${msg('Waiting for approval')}
-              ></sl-button>
-            `
-          : html`
-              <sl-button
-                .label=${msg('Reject')}
-                @click=${() => this.rejectTransactionRequest()}
-              ></sl-button>
-              <sl-button
-                variant="primary"
-                .label=${msg('Accept')}
-                @click=${() => this.acceptTransactionRequest()}
-              ></sl-button>
-            `}
+        <div class="row">${this.renderActions(transactionRequest)}</div>
       </div>
     `;
   }

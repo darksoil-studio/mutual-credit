@@ -12,14 +12,14 @@
   <body>
     <mutual-credit-demo></mutual-credit-demo>
     <script type="module">
-      import { render, html } from 'lit';
-      import { AppWebsocket, AdminWebsocket } from '@holochain/client';
-      import Applet from './src/index.ts';
-      import '@darksoil/mutual-credit-transactions/dist/elements/my-transaction-history.js';
-      import '@darksoil/mutual-credit-transactions/dist/elements/my-balance.js';
-      import '@darksoil/mutual-credit-transaction-requests/dist/elements/create-transaction-request.js';
-      import '@darksoil/mutual-credit-transaction-requests/dist/elements/pending-transaction-requests.js';
-      import '@darksoil/mutual-credit-transaction-requests/dist/elements/transaction-request-detail.js';
+      import '@shoelace-style/shoelace/dist/themes/light.css';
+      import { render, html, LitElement } from 'lit';
+      import { AppAgentWebsocket } from '@holochain/client';
+      import {
+        ProfilesClient,
+        ProfilesStore,
+      } from '@holochain-open-dev/profiles';
+      import Applet from '../src/index.ts';
       import {
         TransactionsStore,
         TransactionsClient,
@@ -28,14 +28,15 @@
         TransactionRequestsStore,
         TransactionRequestsClient,
       } from '@darksoil/mutual-credit-transaction-requests';
+      import '@darksoil/mutual-credit-transaction-requests/dist/elements/create-transaction-request.js';
+      import '@darksoil/mutual-credit-transactions/dist/elements/my-transaction-history.js';
+      import '@darksoil/mutual-credit-transactions/dist/elements/my-balance.js';
+      import '@darksoil/mutual-credit-transaction-requests/dist/elements/pending-transaction-requests.js';
+      import '@darksoil/mutual-credit-transaction-requests/dist/elements/transaction-request-detail.js';
+      import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
+      import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js';
 
-      async function setup() {
-        const appAgentWs = await AppAgentWebsocket.connect('');
-
-        render(html``, document.getElementById('demo'));
-      }
-      setup();
-      class ProfilesTest extends LitElement {
+      class MutualCreditDemo extends LitElement {
         static get properties() {
           return {
             loaded: {
@@ -52,13 +53,16 @@
 
           const service = new ProfilesClient(client, 'mutual_credit');
 
-          this.store = new ProfilesStore(service);
+          this.profilesStore = new ProfilesStore(service);
+          const transactionsClient = new TransactionsClient(
+            client,
+            'mutual_credit'
+          );
           this.transactionRequestsStore = new TransactionRequestsStore(
-            new TransactionRequestsClient(client, 'mutual_credit')
+            new TransactionRequestsClient(client, 'mutual_credit'),
+            transactionsClient
           );
-          this.transactionsStore = new TransactionsStore(
-            new TransactionsClient(client, 'mutual_credit')
-          );
+          this.transactionsStore = new TransactionsStore(transactionsClient);
           this.loaded = true;
         }
 

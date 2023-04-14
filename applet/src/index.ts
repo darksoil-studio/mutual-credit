@@ -1,12 +1,18 @@
-import { TransactionRequestsStore, TransactionRequestsClient } from '@darksoil/mutual-credit-transaction-requests';
-import 'lib/mutual_credit/transaction-requests/elements/transaction-requests-context.js';
+import {
+  TransactionRequestsStore,
+  TransactionRequestsClient,
+} from '@darksoil/mutual-credit-transaction-requests';
+import '@darksoil/mutual-credit-transaction-requests/dist/elements/transaction-requests-context.js';
 
-import { TransactionsStore, TransactionsClient } from 'lib';
-import 'lib/mutual_credit/transactions/elements/transactions-context.js';
+import {
+  TransactionsStore,
+  TransactionsClient,
+} from '@darksoil/mutual-credit-transactions';
+import '@darksoil/mutual-credit-transactions/dist/elements/transactions-context.js';
 
 import { ActionHash, AppAgentClient, CellType } from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
-import '@holochain-open-dev/profiles/elements/profiles-context.js';
+import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
 
 import {
   CrossGroupViews,
@@ -17,8 +23,9 @@ import {
   OpenViews,
   WeApplet,
   WeServices,
-} from '@lightningrodlabs/we-applet';
+} from './we-applet';
 import './main-block';
+import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
 function wrapGroupView(
   client: AppAgentClient,
@@ -26,10 +33,19 @@ function wrapGroupView(
   groupServices: GroupServices,
   innerTemplate: TemplateResult
 ): TemplateResult {
-  return html`
-    <profiles-context .store=${groupServices.profilesStore}>
-      ${innerTemplate}
-    </profiles-context>`;
+  const transactionsClient = new TransactionsClient(client, 'transactions');
+  const transactionsStore = new TransactionsStore(transactionsClient);
+  const transactionRequestsStore = new TransactionRequestsStore(
+    new TransactionRequestsClient(client, 'transaction_requests'),
+    transactionsClient
+  );
+  return html` <profiles-context .store=${groupServices.profilesStore}>
+    <transactions-context .store=${transactionsStore}>
+      <transaction-requests-context .store=${transactionRequestsStore}>
+        ${innerTemplate}
+      </transaction-requests-context>
+    </transactions-context>
+  </profiles-context>`;
 }
 
 function groupViews(
@@ -51,13 +67,11 @@ function groupViews(
           element
         ),
     },
-    entries: {}
-  profiles_integrity: {},
-}
-  transaction_requests_integrity: {},
-}
-  transactions_integrity: {},
-},
+    entries: {
+      profiles_integrity: {},
+      transaction_requests_integrity: {},
+      transactions_integrity: {},
+    },
   };
 }
 
@@ -79,54 +93,3 @@ const applet: WeApplet = {
 };
 
 export default applet;
-
-function wrapTransactionsGroupView(
-  client: AppAgentClient,
-  groupInfo: GroupInfo,
-  groupServices: GroupServices,
-  innerTemplate: TemplateResult
-): TemplateResult {
-  const transactionsStore = new TransactionsStore(new TransactionsClient(client, 'transactions'));
-  return wrapGroupView(
-    client,
-    groupInfo,
-    groupServices,
-    html`<transactions-context .store=${ transactionsStore}>
-      ${innerTemplate}
-    </transactions-context>`);
-}
-
-
-function wrapTransactionRequestsGroupView(
-  client: AppAgentClient,
-  groupInfo: GroupInfo,
-  groupServices: GroupServices,
-  innerTemplate: TemplateResult
-): TemplateResult {
-  const transactionRequestsStore = new TransactionRequestsStore(new TransactionRequestsClient(client, 'transaction_requests'));
-  return wrapGroupView(
-    client,
-    groupInfo,
-    groupServices,
-    html`<transaction-requests-context .store=${ transactionRequestsStore}>
-      ${innerTemplate}
-    </transaction-requests-context>`);
-}
-
-
-function wrapProfilesGroupView(
-  client: AppAgentClient,
-  groupInfo: GroupInfo,
-  groupServices: GroupServices,
-  innerTemplate: TemplateResult
-): TemplateResult {
-  const profilesStore = new ProfilesStore(new ProfilesClient(client, 'profiles'));
-  return wrapGroupView(
-    client,
-    groupInfo,
-    groupServices,
-    html`<profiles-context .store=${ profilesStore}>
-      ${innerTemplate}
-    </profiles-context>`);
-}
-

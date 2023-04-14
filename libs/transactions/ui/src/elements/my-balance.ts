@@ -33,7 +33,7 @@ export class MyBalance extends LitElement {
     return html`
       <div class="column center-content" style="flex: 1;">
         <span style="font-size: 24px; margin: 16px;">
-          ${roundedBalance > 0 ? '+' : '-'}${roundedBalance} ${msg('credits')}
+          ${roundedBalance > 0 ? '+' : ''}${roundedBalance} ${msg('credits')}
         </span>
       </div>
     `;

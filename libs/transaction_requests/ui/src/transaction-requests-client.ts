@@ -34,7 +34,7 @@ export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSig
   ): Promise<string> {
     return this.callZome('create_transaction_request', {
       transaction_request_type: transactionRequestType,
-      coutnerparty_pub_key: counterpartyPublicKey,
+      counterparty_pub_key: counterpartyPublicKey,
       amount,
     });
   }
@@ -63,6 +63,15 @@ export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSig
     };
   }
 
+  async getTransactionForTransactionRequest(
+    transactionRequestHash: ActionHash
+  ): Promise<ActionHash | undefined> {
+    return this.callZome(
+      'get_transaction_for_transaction_request',
+      transactionRequestHash
+    );
+  }
+
   async acceptTransactionRequest(
     transactionRequestHash: ActionHash
   ): Promise<CountersignedEntryRecord<Transaction>> {
@@ -82,7 +91,7 @@ export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSig
   }
 
   async clearTransactionRequests(
-    transactionRequestsHashes: ActionHash
+    transactionRequestsHashes: Array<ActionHash>
   ): Promise<void> {
     return this.callZome(
       'clear_transaction_requests',

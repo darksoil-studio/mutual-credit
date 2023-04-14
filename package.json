@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": [
     "libs/transactions/ui",
-    "libs/transactions_requests/ui",
+    "libs/transaction_requests/ui",
     "applet"
   ],
   "scripts": {
@@ -15,7 +15,8 @@
     "build:watch:libs": "concurrently \"npm run build:watch -w @darksoil/mutual-credit-transactions\" \"npm run build:watch -w @darksoil/mutual-credit-transaction-requests\"",
     "build:libs": "npm run build -w @darksoil/mutual-credit-transactions && npm run build -w @darksoil/mutual-credit-transaction-requests ",
     "build:happ": "npm run build:zomes && hc app pack workdir --recursive",
-    "build:zomes": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
+    "build:zomes": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown",
+    "prepare": "npm run build:libs"
   },
   "devDependencies": {
     "@holochain-playground/cli": "^0.1.0",

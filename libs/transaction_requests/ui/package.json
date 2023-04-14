@@ -2,7 +2,7 @@
   "name": "@darksoil/mutual-credit-transaction-requests",
   "version": "0.1.0",
   "scripts": {
-    "build:watch": "tsc -w",
+    "build:watch": "tsc -w --preserveWatchOutput",
     "build": "tsc",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --fix --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
@@ -14,7 +14,7 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./*": "./dist/*"
+    "./dist/*": "./dist/*"
   },
   "dependencies": {
     "@holochain/client": "^0.12.2",

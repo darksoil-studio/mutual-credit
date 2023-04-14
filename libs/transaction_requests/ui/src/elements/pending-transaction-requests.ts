@@ -1,7 +1,11 @@
 import { html, css, LitElement } from 'lit';
 import { localized, msg } from '@lit/localize';
 import { customElement } from 'lit/decorators.js';
-import { sharedStyles } from '@holochain-open-dev/elements';
+import {
+  notifyError,
+  sharedStyles,
+  wrapPathInSvg,
+} from '@holochain-open-dev/elements';
 import {
   counterparty,
   isOutgoing,
@@ -20,6 +24,7 @@ import {
   StoreSubscriber,
 } from '@holochain-open-dev/stores';
 import { ActionHash } from '@holochain/client';
+import { mdiNotificationClearAll } from '@mdi/js';
 
 @localized()
 @customElement('pending-transaction-requests')
@@ -71,12 +76,36 @@ export class PendingTransactionRequests extends LitElement {
     );
   }
 
-  renderTransactionRequestList(
-    title: string,
+  async clearTransactionRequests(
     transactionRequests: Array<EntryRecord<TransactionRequest>>
   ) {
+    try {
+      await this.transactionRequestsStore.client.clearTransactionRequests(
+        transactionRequests.map(r => r.actionHash)
+      );
+    } catch (e) {
+      notifyError(msg('Error rejecting the transaction request'));
+    }
+  }
+
+  renderTransactionRequestList(
+    title: string,
+    transactionRequests: Array<EntryRecord<TransactionRequest>>,
+    clearVisible: boolean
+  ) {
     return html`<div class="column">
-      <span class="title">${title}</span>
+      <div class="row" style="align-items:center">
+        <span class="title" style="flex: 1">${title}</span>
+        ${clearVisible
+          ? html`
+              <sl-icon-button
+                .src=${wrapPathInSvg(mdiNotificationClearAll)}
+                @click=${() =>
+                  this.clearTransactionRequests(transactionRequests)}
+              ></sl-icon-button>
+            `
+          : html``}
+      </div>
 
       ${transactionRequests.length === 0
         ? this.renderPlaceholder(title)
@@ -134,7 +163,7 @@ export class PendingTransactionRequests extends LitElement {
           .filter(
             tr =>
               tr!.status === 'pending' &&
-              tr?.transactionRequest.action.author.toString() ===
+              tr?.transactionRequest.action.author.toString() !==
                 this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
           )
           .map(tr => tr?.transactionRequest);
@@ -142,7 +171,7 @@ export class PendingTransactionRequests extends LitElement {
           .filter(
             tr =>
               tr!.status === 'pending' &&
-              tr?.transactionRequest.action.author.toString() !==
+              tr?.transactionRequest.action.author.toString() ===
                 this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
           )
           .map(tr => tr?.transactionRequest);
@@ -151,6 +180,14 @@ export class PendingTransactionRequests extends LitElement {
           .filter(
             tr =>
               tr!.status === 'rejected' &&
+              tr?.transactionRequest.action.author.toString() ===
+                this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
+          )
+          .map(tr => tr?.transactionRequest);
+        const cancelledRequests = Array.from(transactionRequests.values())
+          .filter(
+            tr =>
+              tr!.status === 'cancelled' &&
               tr?.transactionRequest.action.author.toString() !==
                 this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
           )
@@ -160,7 +197,7 @@ export class PendingTransactionRequests extends LitElement {
           .filter(
             tr =>
               tr!.status === 'completed' &&
-              tr?.transactionRequest.action.author.toString() !==
+              tr?.transactionRequest.action.author.toString() ===
                 this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
           )
           .map(tr => tr?.transactionRequest);
@@ -168,16 +205,28 @@ export class PendingTransactionRequests extends LitElement {
         return html`<div class="row">
           ${this.renderTransactionRequestList(
             msg('Incoming'),
-            incomingRequests
+            incomingRequests,
+            false
           )}
-          ${this.renderTransactionRequestList(msg('Pending'), incomingRequests)}
+          ${this.renderTransactionRequestList(
+            msg('Pending'),
+            pendingRequests,
+            false
+          )}
+          ${this.renderTransactionRequestList(
+            msg('Cancelled'),
+            cancelledRequests,
+            true
+          )}
           ${this.renderTransactionRequestList(
             msg('Rejected'),
-            rejectedRequests
+            rejectedRequests,
+            true
           )}
           ${this.renderTransactionRequestList(
             msg('Completed'),
-            completedRequests
+            completedRequests,
+            true
           )}
         </div>`;
       case 'error':

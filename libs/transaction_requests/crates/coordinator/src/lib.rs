@@ -22,7 +22,7 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
 }
 
 #[hdk_extern]
-fn recv_remote_signal(signal: SerializedBytes) -> ExternResult<()> {
+fn recv_remote_signal(signal: Signal) -> ExternResult<()> {
     emit_signal(&signal)?;
     Ok(())
 }
@@ -30,9 +30,8 @@ fn recv_remote_signal(signal: SerializedBytes) -> ExternResult<()> {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum Signal {
-    TransactionRequestReceived {
-        transaction_request_hash: ActionHash,
-        transaction_request: TransactionRequest,
+    TransactionRequestCreated {
+        transaction_request: Record,
     },
     TransactionRequestCancelled {
         transaction_request_hash: ActionHash,
@@ -43,8 +42,5 @@ pub enum Signal {
     TransactionRequestCleared {
         transaction_request_hash: ActionHash,
     },
-    TransactionCompleted {
-        transaction_request_hash: ActionHash,
-        transaction: Record,
-    },
+    // Transaction completed comes from the transactions zome
 }

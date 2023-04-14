@@ -5,16 +5,16 @@ export function counterparty(
   myPubKey: AgentPubKey,
   transaction: Transaction
 ): AgentPubKey {
-  if (transaction.recipient_pub_key.toString() === myPubKey.toString())
-    return transaction.spender_pub_key;
-  return transaction.recipient_pub_key;
+  if (transaction.recipient.agent_pub_key.toString() === myPubKey.toString())
+    return transaction.spender.agent_pub_key;
+  return transaction.recipient.agent_pub_key;
 }
 
 export function isOutgoing(
   myPubKey: AgentPubKey,
   transaction: Transaction
 ): boolean {
-  return transaction.recipient_pub_key.toString() === myPubKey.toString()
+  return transaction.recipient.agent_pub_key.toString() === myPubKey.toString()
     ? true
     : false;
 }
