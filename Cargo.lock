@@ -1811,14 +1811,10 @@ dependencies = [
 name = "hc_zome_mutual_credit_transaction_requests_coordinator"
 version = "0.0.1"
 dependencies = [
- "fixt",
- "futures",
  "hc_zome_mutual_credit_transaction_requests_integrity",
  "hc_zome_mutual_credit_transactions_types",
  "hdk",
- "holochain",
  "serde",
- "tokio",
 ]
 
 [[package]]
@@ -1834,14 +1830,10 @@ dependencies = [
 name = "hc_zome_mutual_credit_transactions_coordinator"
 version = "0.0.1"
 dependencies = [
- "fixt",
- "futures",
  "hc_zome_mutual_credit_transactions_integrity",
  "hc_zome_mutual_credit_transactions_types",
  "hdk",
- "holochain",
  "serde",
- "tokio",
 ]
 
 [[package]]
@@ -4311,13 +4303,9 @@ dependencies = [
 name = "profiles"
 version = "0.0.1"
 dependencies = [
- "fixt",
- "futures",
  "hc_zome_profiles_coordinator",
  "hdk",
- "holochain",
  "serde",
- "tokio",
 ]
 
 [[package]]
@@ -6175,13 +6163,9 @@ dependencies = [
 name = "transaction_requests"
 version = "0.0.1"
 dependencies = [
- "fixt",
- "futures",
  "hc_zome_mutual_credit_transaction_requests_coordinator",
  "hdk",
- "holochain",
  "serde",
- "tokio",
 ]
 
 [[package]]
@@ -6198,13 +6182,9 @@ dependencies = [
 name = "transactions"
 version = "0.0.1"
 dependencies = [
- "fixt",
- "futures",
  "hc_zome_mutual_credit_transactions_coordinator",
  "hdk",
- "holochain",
  "serde",
- "tokio",
 ]
 
 [[package]]

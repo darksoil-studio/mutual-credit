@@ -6,7 +6,7 @@ use hdk::prelude::*;
 
 use crate::{
     utils::{build_transaction, call_transactions, get_counterparty},
-    TransactionRequest,
+    Signal, TransactionRequest,
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -62,17 +62,95 @@ pub fn create_transaction_request(input: CreateTransactionRequestInput) -> Exter
 }
 
 #[hdk_extern]
-pub fn cancel_transaction_request(_transaction_request_hash: ActionHash) -> ExternResult<()> {
+pub fn clear_transaction_requests(
+    transaction_requests_hashes: Vec<ActionHash>,
+) -> ExternResult<()> {
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
+    let links = get_links(my_pub_key, LinkTypes::AgentToTransactionRequest, None)?;
+
+    for link in links {
+        let transaction_request_hash = ActionHash::from(link.target.clone());
+        if transaction_requests_hashes
+            .iter()
+            .find(|hash| transaction_request_hash.eq(hash))
+            .is_some()
+        {
+            delete_link(link.create_link_hash)?;
+            emit_signal(Signal::TransactionRequestCleared {
+                transaction_request_hash,
+            })?;
+        }
+    }
+
     Ok(())
 }
 
 #[hdk_extern]
-pub fn reject_transaction_request(_transaction_request_hash: ActionHash) -> ExternResult<()> {
+pub fn cancel_transaction_request(transaction_request_hash: ActionHash) -> ExternResult<()> {
+    delete_entry(transaction_request_hash.clone())?;
+    clear_transaction_requests(vec![transaction_request_hash.clone()])?;
+
+    let transaction_request_record = get_transaction_request(transaction_request_hash.clone())?
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Couldn't get transaction request",
+        ))))?;
+
+    let transaction_request: TransactionRequest = transaction_request_record
+        .record
+        .entry()
+        .to_app_option()
+        .map_err(|e| {
+            wasm_error!(WasmErrorInner::Guest(format!(
+                "Failed to convert entry to app option: {}",
+                e
+            )))
+        })?
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Malformed transaction request",
+        ))))?;
+    let counterparty = get_counterparty(&transaction_request)?;
+
+    let signal = Signal::TransactionRequestCancelled {
+        transaction_request_hash,
+    };
+    emit_signal(signal.clone())?;
+
+    remote_signal(ExternIO::encode(signal), vec![counterparty])?;
+
     Ok(())
 }
 
 #[hdk_extern]
-pub fn clear_transaction_request(_transaction_request_hash: ActionHash) -> ExternResult<()> {
+pub fn reject_transaction_request(transaction_request_hash: ActionHash) -> ExternResult<()> {
+    delete_entry(transaction_request_hash.clone())?;
+    clear_transaction_requests(vec![transaction_request_hash.clone()])?;
+    let transaction_request_record = get_transaction_request(transaction_request_hash.clone())?
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Couldn't get transaction request",
+        ))))?;
+
+    let transaction_request: TransactionRequest = transaction_request_record
+        .record
+        .entry()
+        .to_app_option()
+        .map_err(|e| {
+            wasm_error!(WasmErrorInner::Guest(format!(
+                "Failed to convert entry to app option: {}",
+                e
+            )))
+        })?
+        .ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
+            "Malformed transaction request",
+        ))))?;
+    let counterparty = get_counterparty(&transaction_request)?;
+
+    let signal = Signal::TransactionRequestRejected {
+        transaction_request_hash,
+    };
+    emit_signal(signal.clone())?;
+
+    remote_signal(ExternIO::encode(signal), vec![counterparty])?;
+
     Ok(())
 }
 
@@ -132,14 +210,29 @@ fn post_commit(actions: Vec<SignedActionHashed>) {
             .map(|h| GetInput::new(h.action_address().clone().into(), Default::default()))
             .collect();
 
-        let records = HDK.with(|hdk| hdk.borrow().get(get_inputs)).unwrap();
-
-        let transactions_i_created: Vec<_> = records
+        let records: Vec<Record> = HDK
+            .with(|hdk| hdk.borrow().get(get_inputs))
+            .unwrap()
             .into_iter()
-            .filter_map(|el| el)
-            .filter_map(|el| el.entry().as_option().map(|e| e.clone()))
-            .filter(|entry| match entry {
-                Entry::CounterSign(session_data, _entry_bytes) => {
+            .filter_map(|r| r)
+            .collect();
+
+        for transaction_record in records.clone() {
+            let transaction = Transaction::try_from(transaction_record.clone()).unwrap();
+
+            let transaction_request_hash = ActionHash::try_from(transaction.info).unwrap();
+
+            emit_signal(Signal::TransactionCompleted {
+                transaction_request_hash,
+                transaction: transaction_record,
+            })
+            .unwrap();
+        }
+
+        let transactions_i_created: Vec<Record> = records
+            .into_iter()
+            .filter(|record| match record.entry().as_option() {
+                Some(Entry::CounterSign(session_data, _entry_bytes)) => {
                     let state = session_data
                         .agent_state_for_agent(&agent_info().unwrap().agent_initial_pubkey)
                         .unwrap();
@@ -176,8 +269,8 @@ pub fn clean_transaction_requests(_: ()) -> ExternResult<()> {
 
     let my_transactions = query_my_transactions()?;
 
-    for record in my_transactions {
-        let transaction = Transaction::try_from(record.clone())?;
+    for transaction_record in my_transactions {
+        let transaction = Transaction::try_from(transaction_record.clone())?;
         let info = transaction.info.clone();
 
         let transaction_request_hash = ActionHash::try_from(info).map_err(|e| {
@@ -195,7 +288,7 @@ pub fn clean_transaction_requests(_: ()) -> ExternResult<()> {
 
             create_link(
                 transaction_request_hash.clone(),
-                record.action_address().clone(),
+                transaction_record.action_address().clone(),
                 LinkTypes::RequestToTransactionAction,
                 (),
             )?;
@@ -233,25 +326,31 @@ fn query_my_transactions() -> ExternResult<Vec<Record>> {
 }
 
 #[hdk_extern]
-pub fn get_my_transaction_requests(_: ()) -> ExternResult<Vec<Record>> {
-    let my_pub_key = agent_info()?.agent_initial_pubkey;
-    let links = get_links(my_pub_key, LinkTypes::AgentToTransactionRequest, None)?;
+pub fn get_transaction_requests_for_agent(agent: AgentPubKey) -> ExternResult<Vec<ActionHash>> {
+    let links = get_links(agent, LinkTypes::AgentToTransactionRequest, None)?;
 
-    let get_inputs = links
+    let action_hashes = links
         .into_iter()
-        .map(|link| {
-            GetInput::new(
-                ActionHash::from(link.target.clone()).into(),
-                GetOptions::default(),
-            )
-        })
+        .map(|link| ActionHash::from(link.target))
         .collect();
 
-    let records = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
+    Ok(action_hashes)
+}
 
-    let transaction_requests = records.into_iter().filter_map(|r| r).collect();
+#[hdk_extern]
+pub fn get_transaction_request(
+    transaction_request_hash: ActionHash,
+) -> ExternResult<Option<RecordDetails>> {
+    let maybe_details = get_details(transaction_request_hash, GetOptions::default())?;
 
-    Ok(transaction_requests)
+    let Some(details) = maybe_details else {  return Ok(None);};
+
+    match details {
+        Details::Record(d) => Ok(Some(d)),
+        _ => Err(wasm_error!(WasmErrorInner::Guest(
+            "Error fetching the details for the transaction request".to_string()
+        ))),
+    }
 }
 
 fn get_chain_top(agent_pub_key: AgentPubKey) -> ExternResult<ActionHash> {

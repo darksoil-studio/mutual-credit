@@ -3,7 +3,13 @@ import {
   EntryRecord,
   ZomeClient,
 } from '@holochain-open-dev/utils';
-import { ActionHash, AgentPubKey, AppAgentClient } from '@holochain/client';
+import {
+  ActionHash,
+  AgentPubKey,
+  AppAgentClient,
+  Delete,
+  SignedActionHashed,
+} from '@holochain/client';
 import { Transaction } from '@darksoil/mutual-credit-transactions';
 
 import {
@@ -11,7 +17,6 @@ import {
   TransactionRequestsSignal,
   TransactionRequestType,
 } from './types';
-import { lazyLoadAndPoll } from '@holochain-open-dev/stores';
 
 export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSignal> {
   constructor(
@@ -27,11 +32,35 @@ export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSig
     counterpartyPublicKey: AgentPubKey,
     amount: number
   ): Promise<string> {
-    return this.callZome('create_transaction', {
+    return this.callZome('create_transaction_request', {
       transaction_request_type: transactionRequestType,
       coutnerparty_pub_key: counterpartyPublicKey,
       amount,
     });
+  }
+
+  async getTransactionRequestsForAgent(
+    agent: AgentPubKey
+  ): Promise<Array<ActionHash>> {
+    return this.callZome('get_transaction_requests_for_agent', agent);
+  }
+
+  async getTransactionRequest(transactionRequestHash: ActionHash): Promise<
+    | {
+        transaction_request: EntryRecord<TransactionRequest>;
+        deletes: Array<SignedActionHashed<Delete>>;
+      }
+    | undefined
+  > {
+    const details = await this.callZome(
+      'get_transaction_request',
+      transactionRequestHash
+    );
+
+    return {
+      transaction_request: new EntryRecord(details.record),
+      deletes: details.deletes,
+    };
   }
 
   async acceptTransactionRequest(
@@ -40,10 +69,25 @@ export class TransactionRequestsClient extends ZomeClient<TransactionRequestsSig
     return this.callZome('accept_transaction_request', transactionRequestHash);
   }
 
-  async getMyTransactionRequests(): Promise<
-    Array<EntryRecord<TransactionRequest>>
-  > {
-    return this.callZome('get_my_transaction_requests', null);
+  async cancelTransactionRequest(
+    transactionRequestHash: ActionHash
+  ): Promise<void> {
+    return this.callZome('cancel_transaction_request', transactionRequestHash);
+  }
+
+  async rejectTransactionRequest(
+    transactionRequestHash: ActionHash
+  ): Promise<void> {
+    return this.callZome('reject_transaction_request', transactionRequestHash);
+  }
+
+  async clearTransactionRequests(
+    transactionRequestsHashes: ActionHash
+  ): Promise<void> {
+    return this.callZome(
+      'clear_transaction_requests',
+      transactionRequestsHashes
+    );
   }
   /* 
   async cancelOffer(offerHash: string) {

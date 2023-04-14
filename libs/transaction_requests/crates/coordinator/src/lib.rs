@@ -27,21 +27,24 @@ fn recv_remote_signal(signal: SerializedBytes) -> ExternResult<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
-pub enum SignalType {
+pub enum Signal {
     TransactionRequestReceived {
         transaction_request_hash: ActionHash,
         transaction_request: TransactionRequest,
-    },
-    TransactionRequestAccepted {
-        transaction_request_hash: ActionHash,
-        transaction: Record,
     },
     TransactionRequestCancelled {
         transaction_request_hash: ActionHash,
     },
     TransactionRequestRejected {
         transaction_request_hash: ActionHash,
+    },
+    TransactionRequestCleared {
+        transaction_request_hash: ActionHash,
+    },
+    TransactionCompleted {
+        transaction_request_hash: ActionHash,
+        transaction: Record,
     },
 }

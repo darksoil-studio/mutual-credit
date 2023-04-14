@@ -57,18 +57,22 @@ async fn simple_transaction() {
 
     consistency_10s([&alice, &bobbo]).await;
 
-    let transaction_requests: Vec<Record> = conductors[0]
+    let transaction_requests: Vec<ActionHash> = conductors[0]
         .call(
             &alice_transaction_requests,
-            "get_my_transaction_requests",
-            (),
+            "get_transaction_requests_for_agent",
+            alice.agent_pubkey().clone(),
         )
         .await;
 
     assert_eq!(transaction_requests.len(), 1);
 
-    let transaction_requests: Vec<Record> = conductors[1]
-        .call(&bob_transaction_requests, "get_my_transaction_requests", ())
+    let transaction_requests: Vec<ActionHash> = conductors[1]
+        .call(
+            &bob_transaction_requests,
+            "get_transaction_requests_for_agent",
+            bobbo.agent_pubkey().clone(),
+        )
         .await;
 
     assert_eq!(transaction_requests.len(), 1);
@@ -117,19 +121,23 @@ async fn simple_transaction() {
         .await;
     assert_eq!(transactions.len(), 1);
 
-    let transaction_requests: Vec<Record> = conductors[0]
+    let transaction_requests: Vec<ActionHash> = conductors[0]
         .call(
             &alice_transaction_requests,
-            "get_my_transaction_requests",
-            (),
+            "get_transaction_requests_for_agent",
+            alice.agent_pubkey().clone(),
         )
         .await;
 
-    assert_eq!(transaction_requests.len(), 1);
+    assert_eq!(transaction_requests.len(), 0);
 
-    let transaction_requests: Vec<Record> = conductors[1]
-        .call(&bob_transaction_requests, "get_my_transaction_requests", ())
+    let transaction_requests: Vec<ActionHash> = conductors[1]
+        .call(
+            &bob_transaction_requests,
+            "get_transaction_requests_for_agent",
+            bobbo.agent_pubkey().clone(),
+        )
         .await;
 
-    assert_eq!(transaction_requests.len(), 1);
+    assert_eq!(transaction_requests.len(), 0);
 }
