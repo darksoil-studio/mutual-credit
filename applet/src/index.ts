@@ -1,7 +1,4 @@
-import { ProfilesStore, ProfilesClient } from 'lib';
-import 'lib/mutual_credit/profiles/elements/profiles-context.js';
-
-import { TransactionRequestsStore, TransactionRequestsClient } from 'lib';
+import { TransactionRequestsStore, TransactionRequestsClient } from '@darksoil/mutual-credit-transaction-requests';
 import 'lib/mutual_credit/transaction-requests/elements/transaction-requests-context.js';
 
 import { TransactionsStore, TransactionsClient } from 'lib';
