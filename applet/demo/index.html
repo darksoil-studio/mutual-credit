@@ -3,103 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <style>
+      html,
       body {
         background: #fafafa;
         font-family: Arial, Helvetica, sans-serif;
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        display: flex;
       }
     </style>
   </head>
   <body>
-    <mutual-credit-demo></mutual-credit-demo>
     <script type="module">
       import '@shoelace-style/shoelace/dist/themes/light.css';
-      import { render, html, LitElement } from 'lit';
       import { AppAgentWebsocket } from '@holochain/client';
-      import {
-        ProfilesClient,
-        ProfilesStore,
-      } from '@holochain-open-dev/profiles';
+      import { fakeEntryHash } from '@holochain-open-dev/utils';
+      import { ProfilesClient } from '@holochain-open-dev/profiles';
+      import { ProfilesZomeMock } from '@holochain-open-dev/profiles/dist/mocks.js';
+      import { weServicesMock } from '@lightningrodlabs/we-applet/dist/mocks.js';
+
       import Applet from '../src/index.ts';
-      import {
-        TransactionsStore,
-        TransactionsClient,
-      } from '@darksoil/mutual-credit-transactions';
-      import {
-        TransactionRequestsStore,
-        TransactionRequestsClient,
-      } from '@darksoil/mutual-credit-transaction-requests';
-      import '@darksoil/mutual-credit-transaction-requests/dist/elements/create-transaction-request.js';
-      import '@darksoil/mutual-credit-transactions/dist/elements/my-transaction-history.js';
-      import '@darksoil/mutual-credit-transactions/dist/elements/my-balance.js';
-      import '@darksoil/mutual-credit-transaction-requests/dist/elements/pending-transaction-requests.js';
-      import '@darksoil/mutual-credit-transaction-requests/dist/elements/transaction-request-detail.js';
-      import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
-      import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js';
 
-      class MutualCreditDemo extends LitElement {
-        static get properties() {
-          return {
-            loaded: {
-              type: Boolean,
-            },
-            selectedTransactionRequest: {
-              type: Object,
-            },
-          };
-        }
+      async function setup() {
+        const appWs = await AppAgentWebsocket.connect(``, '');
 
-        async firstUpdated() {
-          const client = await AppAgentWebsocket.connect('', 'test-app');
-
-          const service = new ProfilesClient(client, 'mutual_credit');
-
-          this.profilesStore = new ProfilesStore(service);
-          const transactionsClient = new TransactionsClient(
-            client,
-            'mutual_credit'
-          );
-          this.transactionRequestsStore = new TransactionRequestsStore(
-            new TransactionRequestsClient(client, 'mutual_credit'),
-            transactionsClient
-          );
-          this.transactionsStore = new TransactionsStore(transactionsClient);
-          this.loaded = true;
-        }
-
-        render() {
-          if (!this.loaded) return html`<span>Loading...</span>`;
-          return html`
-            <profiles-context .store=${this.profilesStore}>
-              <transaction-requests-context
-                .store=${this.transactionRequestsStore}
-              >
-                <transactions-context .store=${this.transactionsStore}>
-                  <profile-prompt>
-                    <create-transaction-request></create-transaction-request>
-                    <pending-transaction-requests
-                      @transaction-request-selected=${e =>
-                        (this.selectedTransactionRequest =
-                          e.detail.transactionRequestHash)}
-                    ></pending-transaction-requests>
-                    ${this.selectedTransactionRequest
-                      ? html`
-                          <transaction-request-detail
-                            .transactionRequestHash=${this
-                              .selectedTransactionRequest}
-                          ></transaction-request-detail>
-                        `
-                      : html``}
-                    <my-transaction-history></my-transaction-history>
-                    <my-balance></my-balance>
-                  </profile-prompt>
-                </transactions-context>
-              </transaction-requests-context>
-            </profiles-context>
-          `;
-        }
+        Applet.appletViews(
+          appWs,
+          fakeEntryHash(),
+          new ProfilesClient(new ProfilesZomeMock()),
+          weServicesMock
+        ).main(document.body);
       }
-
-      customElements.define('mutual-credit-demo', MutualCreditDemo);
+      setup();
     </script>
   </body>
 </html>

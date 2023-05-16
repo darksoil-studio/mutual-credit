@@ -121,13 +121,7 @@ export class MyTransactionHistory extends LitElement {
                 ></sl-relative-time>
               </span>
               <span style="font-size: 20px; margin: 0 24px;">
-                ${isOutgoing(
-                  this.transactionsStore.client.appAgentClient.myPubKey,
-                  transaction.entry
-                )
-                  ? '-'
-                  : '+'}${transaction.entry.amount}
-                ${msg('credits')}
+                ${transaction.entry.amount} ${msg('credits')}
               </span>
             </div>
           `

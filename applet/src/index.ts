@@ -14,23 +14,16 @@ import { ActionHash, AppAgentClient, CellType } from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
 import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
 
-import {
-  CrossGroupViews,
-  GroupInfo,
-  GroupServices,
-  GroupViews,
-  GroupWithApplets,
-  OpenViews,
-  WeApplet,
-  WeServices,
-} from './we-applet';
-import './main-block';
+import { WeServices } from '@lightningrodlabs/we-applet';
+import '@lightningrodlabs/we-applet/dist/elements/we-services-context.js';
+
+import './mutual-credit-applet-main.js';
 import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
-function wrapGroupView(
+function wrapAppletView(
   client: AppAgentClient,
-  groupInfo: GroupInfo,
-  groupServices: GroupServices,
+  profilesClient: ProfilesClient,
+  weServices: WeServices,
   innerTemplate: TemplateResult
 ): TemplateResult {
   const transactionsClient = new TransactionsClient(client, 'transactions');
@@ -39,34 +32,35 @@ function wrapGroupView(
     new TransactionRequestsClient(client, 'transaction_requests'),
     transactionsClient
   );
-  return html` <profiles-context .store=${groupServices.profilesStore}>
-    <transactions-context .store=${transactionsStore}>
-      <transaction-requests-context .store=${transactionRequestsStore}>
-        ${innerTemplate}
-      </transaction-requests-context>
-    </transactions-context>
-  </profiles-context>`;
+  return html` <we-services-context .services=${weServices}>
+    <profiles-context .store=${new ProfilesStore(profilesClient)}>
+      <transactions-context .store=${transactionsStore}>
+        <transaction-requests-context .store=${transactionRequestsStore}>
+          ${innerTemplate}
+        </transaction-requests-context>
+      </transactions-context>
+    </profiles-context></we-services-context
+  >`;
 }
 
-function groupViews(
+function appletViews(
   client: AppAgentClient,
-  groupInfo: GroupInfo,
-  groupServices: GroupServices,
+  _appletId: EntryHash,
+  profilesClient: ProfilesClient,
   weServices: WeServices
-): GroupViews {
+): AppletViews {
   return {
-    blocks: {
-      main: element =>
-        render(
-          wrapGroupView(
-            client,
-            groupInfo,
-            groupServices,
-            html`<main-block></main-block>`
-          ),
-          element
+    main: element =>
+      render(
+        wrapAppletView(
+          client,
+          profilesClient,
+          weServices,
+          html`<main-block></main-block>`
         ),
-    },
+        element
+      ),
+    blocks: {},
     entries: {
       profiles_integrity: {},
       transaction_requests_integrity: {},
@@ -75,21 +69,21 @@ function groupViews(
   };
 }
 
-function crossGroupViews(
-  groupWithApplets: GroupWithApplets[]
-): CrossGroupViews {
+function crossAppletViews(
+  applets: ReadonlyMap<EntryHash, AppletClients>,
+  weServices: WeServices
+): CrossAppletViews {
   return {
-    blocks: {
-      main: element => {},
-    },
+    main: element => {},
+    blocks: {},
   };
 }
 
 const applet: WeApplet = {
+  appletViews,
+  crossAppletViews,
   attachableTypes: [],
   search: async () => [],
-  groupViews,
-  crossGroupViews,
 };
 
 export default applet;

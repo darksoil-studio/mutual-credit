@@ -6,23 +6,23 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "vite --port $UI_PORT --clearScreen false",
+    "start": "vite --port $UI_PORT --clearScreen false demo",
     "build": "rollup -c",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
     "package": "npm run build && cd dist && bestzip ../dist.zip * && cd .. && hc web-app pack workdir --recursive"
   },
   "dependencies": {
-    "@holochain-open-dev/elements": "^0.4.0",
-    "@holochain-open-dev/file-storage": "^0.2.0",
-    "@holochain-open-dev/profiles": "^0.13.00",
-    "@holochain-open-dev/stores": "^0.4.2",
-    "@holochain-open-dev/utils": "^0.13.0",
-    "@holochain/client": "^0.12.0",
+    "@darksoil/mutual-credit-transaction-requests": "^0.1.0",
+    "@darksoil/mutual-credit-transactions": "^0.1.0",
+    "@holochain-open-dev/elements": "^0.5.2",
+    "@holochain-open-dev/profiles": "^0.14.1",
+    "@holochain-open-dev/stores": "^0.5.0",
+    "@holochain-open-dev/utils": "^0.14.0",
+    "@holochain/client": "^0.14.1",
+    "@lightningrodlabs/we-applet": "^0.5.0",
     "@lit-labs/context": "^0.2.0",
     "@lit/localize": "^0.11.4",
-    "@darksoil/mutual-credit-transactions": "^0.1.0",
-    "@darksoil/mutual-credit-transaction-requests": "^0.1.0",
     "lit": "^2.6.0"
   },
   "devDependencies": {
@@ -52,6 +52,7 @@
     "tslib": "^2.0.0",
     "typescript": "^4.9.0",
     "vite": "^4.0.4",
-    "vite-plugin-checker": "^0.5.3"
+    "vite-plugin-checker": "^0.5.3",
+    "vite-plugin-static-copy": "^0.15.0"
   }
 }
