@@ -214,11 +214,6 @@ fn inner_post_commit(actions: Vec<SignedActionHashed>) -> ExternResult<()> {
                 .is_some()
         })
         .collect();
-    error!(
-        "Postcommig transaction_reqeuests {} {:?}",
-        my_new_transactions.len(),
-        agent_info()?.agent_latest_pubkey
-    );
 
     if my_new_transactions.len() > 0 {
         let result = call_remote(

@@ -59,8 +59,8 @@ export class PendingTransactionRequests extends LitElement {
   renderPlaceholder(type: string) {
     return html`
       <div class="column center-content" style="flex: 1">
-        <span style="padding-top: 34px;" class="placeholder padding">
-          You have no ${type.toLowerCase()}
+        <span style="padding: 16px;" class="placeholder padding">
+          You have no ${type.toLowerCase()} transaction requests.
         </span>
       </div>
     `;
@@ -93,7 +93,7 @@ export class PendingTransactionRequests extends LitElement {
     transactionRequests: Array<EntryRecord<TransactionRequest>>,
     clearVisible: boolean
   ) {
-    return html`<div class="column">
+    return html`<div class="column" style="margin-right: 16px">
       <div class="row" style="align-items:center">
         <span class="title" style="flex: 1">${title}</span>
         ${clearVisible
@@ -115,6 +115,7 @@ export class PendingTransactionRequests extends LitElement {
                 tr => html`
                   <div
                     class="row"
+                    style="align-items: center; margin-top: 16px"
                     @click=${() =>
                       this.transactionRequestSelected(tr.actionHash)}
                   >
@@ -134,6 +135,7 @@ export class PendingTransactionRequests extends LitElement {
                           </span>
                         `}
                     <agent-avatar
+                      style="margin-left: 8px"
                       .agentPubKey=${counterparty(
                         this.transactionRequestsStore.client.appAgentClient
                           .myPubKey,

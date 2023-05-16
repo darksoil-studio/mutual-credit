@@ -15,6 +15,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { transactionRequestsStoreContext } from '../context';
 import {
   counterparty,
+  isOutgoing,
   TransactionRequestsStore,
 } from '../transaction-requests-store';
 import { TransactionRequestWithStatus } from '../types';
@@ -72,6 +73,8 @@ export class TransactionRequestDetail extends LitElement {
       );
     } catch (e) {
       notifyError(msg('Error accepting the transaction request'));
+      console.log((e as any).data.data);
+      console.error(e);
     }
     this._accepting = false;
   }
@@ -93,6 +96,7 @@ export class TransactionRequestDetail extends LitElement {
       );
     } catch (e) {
       notifyError(msg('Error cancelling the transaction request'));
+      console.error(e);
     }
     this._cancelling = false;
   }
@@ -114,6 +118,7 @@ export class TransactionRequestDetail extends LitElement {
       );
     } catch (e) {
       notifyError(msg('Error rejecting the transaction request'));
+      console.error(e);
     }
     this._rejecting = false;
   }
@@ -134,7 +139,7 @@ export class TransactionRequestDetail extends LitElement {
         <sl-button @click=${() => this.cancelTransactionRequest()}>
           ${msg('Cancel')}
         </sl-button>
-        <sl-button variant="primary" disabled>
+        <sl-button variant="primary" disabled style="margin-left: 16px">
           ${msg('Waiting for approval')}
         </sl-button>
       `;
@@ -143,6 +148,7 @@ export class TransactionRequestDetail extends LitElement {
         ${msg('Reject')}
       </sl-button>
       <sl-button
+        style="margin-left: 16px"
         variant="primary"
         @click=${() => this.acceptTransactionRequest()}
       >
@@ -154,17 +160,33 @@ export class TransactionRequestDetail extends LitElement {
   renderTransactionRequest(transactionRequest: TransactionRequestWithStatus) {
     return html`
       <div class="column">
-        <agent-avatar
-          .agentPubKey=${counterparty(
-            this.transactionRequestsStore.client.appAgentClient.myPubKey,
+        <div class="row" style="align-items: center; margin-bottom: 16px">
+          ${isOutgoing(
+            this.transactionRequestsStore.client.client.myPubKey,
             transactionRequest.transactionRequest.entry
-          )}
-        ></agent-avatar>
-
-        <span class="item">
-          Transaction amount:
-          ${transactionRequest.transactionRequest.entry.amount} credits
-        </span>
+          )
+            ? html`
+                <span
+                  >${msg('Send')}
+                  ${transactionRequest.transactionRequest.entry.amount}
+                  ${msg('to')}
+                </span>
+              `
+            : html`
+                <span
+                  >${msg('Receive')}
+                  ${transactionRequest.transactionRequest.entry.amount}
+                  ${msg('from')}
+                </span>
+              `}
+          <agent-avatar
+            style="margin-left: 8px"
+            .agentPubKey=${counterparty(
+              this.transactionRequestsStore.client.appAgentClient.myPubKey,
+              transactionRequest.transactionRequest.entry
+            )}
+          ></agent-avatar>
+        </div>
 
         <div class="row">${this.renderActions(transactionRequest)}</div>
       </div>

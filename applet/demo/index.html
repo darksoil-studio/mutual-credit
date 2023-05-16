@@ -19,7 +19,13 @@
       import '@shoelace-style/shoelace/dist/themes/light.css';
       import { AppAgentWebsocket } from '@holochain/client';
       import { fakeEntryHash } from '@holochain-open-dev/utils';
-      import { ProfilesClient } from '@holochain-open-dev/profiles';
+      import { html, render } from 'lit';
+      import {
+        ProfilesClient,
+        ProfilesStore,
+      } from '@holochain-open-dev/profiles';
+      import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
+      import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js';
       import { ProfilesZomeMock } from '@holochain-open-dev/profiles/dist/mocks.js';
       import { weServicesMock } from '@lightningrodlabs/we-applet/dist/mocks.js';
 
@@ -28,12 +34,23 @@
       async function setup() {
         const appWs = await AppAgentWebsocket.connect(``, '');
 
-        Applet.appletViews(
-          appWs,
-          fakeEntryHash(),
-          new ProfilesClient(new ProfilesZomeMock()),
-          weServicesMock
-        ).main(document.body);
+        const client = new ProfilesClient(appWs, 'mutual_credit');
+        const store = new ProfilesStore(client);
+
+        render(
+          html`
+            <profiles-context .store=${store}>
+              <profile-prompt>
+                <div id="content" style="display: flex; flex: 1"></div>
+              </profile-prompt>
+            </profiles-context>
+          `,
+          document.body
+        );
+
+        Applet.appletViews(appWs, fakeEntryHash(), client, weServicesMock).main(
+          document.getElementById('content')
+        );
       }
       setup();
     </script>

@@ -50,9 +50,8 @@ export class MyBalance extends LitElement {
       case 'error':
         return html`
           <display-error
-            tooltip
             .headline=${msg('Error fetching the balance')}
-            .error=${this._myBalance.value.error.data.data}
+            .error=${this._myBalance.value.error}
           ></display-error>
         `;
     }
