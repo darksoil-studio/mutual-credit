@@ -47,7 +47,7 @@ export default defineConfig({
         {
           src: path.resolve(
             __dirname,
-            '../../node_modules/@shoelace-style/shoelace/dist/themes/light.css'
+            '../node_modules/@shoelace-style/shoelace/dist/themes/light.css'
           ),
           dest: path.resolve(__dirname, 'dist'),
           rename: 'styles.css',

@@ -4,4 +4,4 @@ name: mututal-credit
 ui:
   bundled: "../dist.zip"
 happ_manifest:
-  bundled: "../../../workdir/mututal-credit.happ"
+  bundled: "../../workdir/mututal-credit.happ"

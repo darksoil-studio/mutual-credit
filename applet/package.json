@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "start": "vite --port $UI_PORT --clearScreen false demo",
-    "build": "rollup -c",
+    "build": "vite build",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
     "format": "eslint --ext .ts,.html . --fix --ignore-path .gitignore && prettier \"**/*.ts\" --write --ignore-path .gitignore",
     "package": "npm run build && cd dist && bestzip ../dist.zip * && cd .. && hc web-app pack workdir --recursive"
@@ -23,6 +23,7 @@
     "@lightningrodlabs/we-applet": "^0.5.0",
     "@lit-labs/context": "^0.2.0",
     "@lit/localize": "^0.11.4",
+    "@shoelace-style/shoelace": "^2.3.0",
     "lit": "^2.6.0"
   },
   "devDependencies": {

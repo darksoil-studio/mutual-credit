@@ -9,7 +9,7 @@
   "scripts": {
     "start": "AGENTS=2 npm run network",
     "network": "hc s clean && npm run build:happ && UI_PORT=8888 concurrently -k \"npm run build:watch:libs\" \"npm start -w applet\" \"npm run launch\" \"holochain-playground\"",
-    "package": "npm run build:happ && && npm run package -w applet",
+    "package": "npm run build:happ && npm run package -w applet",
     "test": "npm run build:happ && cargo nextest run -j 1",
     "launch": "echo \"pass\" | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/mutual-credit.happ --ui-port $UI_PORT network mdns",
     "build:watch:libs": "concurrently \"npm run build:watch -w @darksoil/mutual-credit-transactions\" \"npm run build:watch -w @darksoil/mutual-credit-transaction-requests\"",
