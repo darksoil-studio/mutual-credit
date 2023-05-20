@@ -45,6 +45,8 @@ export class CreateTransactionRequest extends LitElement {
   creating = false;
 
   async createTransactionRequest() {
+    if (this.creating) return;
+
     this.creating = true;
     try {
       await this.transactionRequestsStore.client.createTransactionRequest(
@@ -76,7 +78,15 @@ export class CreateTransactionRequest extends LitElement {
 
   renderConfirmDialog() {
     return html`
-      <sl-dialog id="dialog" .label=${msg('Confirm Transaction Request')}>
+      <sl-dialog
+        id="dialog"
+        .label=${msg('Confirm Transaction Request')}
+        @sl-request-close=${(e: CustomEvent) => {
+          if (this.creating) {
+            e.preventDefault();
+          }
+        }}
+      >
         ${this.transactionRequestInput
           ? html`
               <span>
@@ -128,6 +138,7 @@ export class CreateTransactionRequest extends LitElement {
         <form
           class="column"
           ${onSubmit(f => {
+            console.log(f);
             this.transactionRequestInput = {
               amount: parseFloat(f.amount),
               counterparty: f.counterparty,

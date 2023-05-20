@@ -1,7 +1,7 @@
 ---
 manifest_version: "1"
-name: mututal-credit
+name: mutual-credit
 ui:
   bundled: "../dist.zip"
 happ_manifest:
-  bundled: "../../workdir/mututal-credit.happ"
+  bundled: "../../workdir/mutual-credit.happ"

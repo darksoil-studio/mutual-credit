@@ -14,7 +14,5 @@ export function isOutgoing(
   myPubKey: AgentPubKey,
   transaction: Transaction
 ): boolean {
-  return transaction.recipient.agent_pub_key.toString() === myPubKey.toString()
-    ? true
-    : false;
+  return transaction.spender.agent_pub_key.toString() === myPubKey.toString();
 }
