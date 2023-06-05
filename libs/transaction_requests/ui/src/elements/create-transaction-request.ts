@@ -138,7 +138,6 @@ export class CreateTransactionRequest extends LitElement {
         <form
           class="column"
           ${onSubmit(f => {
-            console.log(f);
             this.transactionRequestInput = {
               amount: parseFloat(f.amount),
               counterparty: f.counterparty,

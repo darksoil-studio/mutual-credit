@@ -10,12 +10,7 @@ import {
 } from '@darksoil/mutual-credit-transactions';
 import '@darksoil/mutual-credit-transactions/dist/elements/transactions-context.js';
 
-import {
-  ActionHash,
-  AppAgentClient,
-  CellType,
-  EntryHash,
-} from '@holochain/client';
+import { AppAgentClient, EntryHash } from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
 import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
 
@@ -27,9 +22,10 @@ import {
   WeServices,
 } from '@lightningrodlabs/we-applet';
 import '@lightningrodlabs/we-applet/dist/elements/we-services-context.js';
-
-import './mutual-credit-applet-main.js';
 import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
+
+import './applet-main.js';
+import './cross-applet-main.js';
 
 function wrapAppletView(
   client: AppAgentClient,
@@ -54,12 +50,12 @@ function wrapAppletView(
   >`;
 }
 
-function appletViews(
+async function appletViews(
   client: AppAgentClient,
   _appletId: EntryHash,
   profilesClient: ProfilesClient,
   weServices: WeServices
-): AppletViews {
+): Promise<AppletViews> {
   return {
     main: element =>
       render(
@@ -73,19 +69,26 @@ function appletViews(
       ),
     blocks: {},
     entries: {
-      profiles_integrity: {},
       transaction_requests_integrity: {},
       transactions_integrity: {},
     },
   };
 }
 
-function crossAppletViews(
+async function crossAppletViews(
   applets: ReadonlyMap<EntryHash, AppletClients>,
   weServices: WeServices
-): CrossAppletViews {
+): Promise<CrossAppletViews> {
   return {
-    main: element => {},
+    main: element =>
+      render(
+        html`
+          <we-services-context .services=${weServices}>
+            <cross-applet-main .applets=${applets}></cross-applet-main
+          ></we-services-context>
+        `,
+        element
+      ),
     blocks: {},
   };
 }

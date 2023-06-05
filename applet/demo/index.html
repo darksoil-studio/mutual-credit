@@ -18,7 +18,7 @@
     <script type="module">
       import '@shoelace-style/shoelace/dist/themes/light.css';
       import { AppAgentWebsocket } from '@holochain/client';
-      import { fakeEntryHash } from '@holochain-open-dev/utils';
+      import { fakeEntryHash, HoloHashMap } from '@holochain-open-dev/utils';
       import { html, render } from 'lit';
       import {
         ProfilesClient,
@@ -31,7 +31,7 @@
 
       import Applet from '../src/index.ts';
 
-      async function setup() {
+      async function setupAppletMain() {
         const appWs = await AppAgentWebsocket.connect(``, '');
 
         const client = new ProfilesClient(appWs, 'mutual_credit');
@@ -48,11 +48,32 @@
           document.body
         );
 
-        Applet.appletViews(appWs, fakeEntryHash(), client, weServicesMock).main(
-          document.getElementById('content')
+        (
+          await Applet.appletViews(
+            appWs,
+            fakeEntryHash(),
+            client,
+            weServicesMock
+          )
+        ).main(document.getElementById('content'));
+      }
+
+      async function setupCrossAppletMain() {
+        const appWs = await AppAgentWebsocket.connect(``, '');
+
+        const client = new ProfilesClient(appWs, 'mutual_credit');
+        const store = new ProfilesStore(client);
+
+        const map = new HoloHashMap();
+        map.set(fakeEntryHash(), {
+          appletClient: appWs,
+          profilesClient: client,
+        });
+        (await Applet.crossAppletViews(map, weServicesMock)).main(
+          document.body
         );
       }
-      setup();
+      setupCrossAppletMain();
     </script>
   </body>
 </html>

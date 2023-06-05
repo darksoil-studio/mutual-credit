@@ -23,8 +23,8 @@ type View =
   | { view: 'transaction_request_detail'; transactionRequestHash: ActionHash };
 
 @localized()
-@customElement('mutual-credit-applet-main')
-export class MutualCreditAppletMain extends LitElement {
+@customElement('applet-main')
+export class AppletMain extends LitElement {
   @state(hashState())
   selectedTransactionRequest: ActionHash | undefined;
 
