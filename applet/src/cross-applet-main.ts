@@ -81,7 +81,7 @@ export class CrossAppletMain extends LitElement {
                           )}
                         >
                           <div class="row title" style="align-items: center">
-                            <span>${msg('Balance in')} ${msg('in')} </span>
+                            <span>${msg('Balance in')}&nbsp;</span>
                             ${applets
                               .get(appletId)
                               ?.groupsIds.map(
@@ -91,7 +91,7 @@ export class CrossAppletMain extends LitElement {
                                       ?.logo_src}
                                     alt="group-${groupsProfiles.get(groupId)
                                       ?.name}"
-                                    style="margin-right: 4px; height: 32px; width: 32px"
+                                    style="margin-right: 4px; height: 32px; width: 32px; border-radius: 50%"
                                   />
                                 `
                               )}

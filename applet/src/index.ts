@@ -63,7 +63,7 @@ async function appletViews(
           client,
           profilesClient,
           weServices,
-          html`<mutual-credit-applet-main></mutual-credit-applet-main>`
+          html`<applet-main></applet-main>`
         ),
         element
       ),
