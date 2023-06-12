@@ -1,5 +1,9 @@
 import { asyncDerived, asyncReadable } from '@holochain-open-dev/stores';
-import { CountersignedEntryRecord } from '@holochain-open-dev/utils';
+import {
+  CountersignedEntryRecord,
+  LazyHoloHashMap,
+} from '@holochain-open-dev/utils';
+import { AgentPubKey } from '@holochain/client';
 import { TransactionsClient } from './transactions-client';
 import { Transaction } from './types';
 import { isOutgoing } from './utils';
@@ -7,11 +11,9 @@ import { isOutgoing } from './utils';
 export class TransactionsStore {
   constructor(public client: TransactionsClient) {}
 
-  myTransactions = asyncReadable<Array<CountersignedEntryRecord<Transaction>>>(
-    async set => {
-      const transactions = await this.client.getAgentTransactions(
-        this.client.appAgentClient.myPubKey
-      );
+  transactionsForAgent = new LazyHoloHashMap((agent: AgentPubKey) =>
+    asyncReadable<Array<CountersignedEntryRecord<Transaction>>>(async set => {
+      const transactions = await this.client.getAgentTransactions(agent);
       set(transactions);
 
       return this.client.onSignal(signal => {
@@ -20,17 +22,22 @@ export class TransactionsStore {
           set(transactions);
         }
       });
-    }
+    })
   );
 
-  myBalance = asyncDerived(this.myTransactions, transactions =>
-    transactions.reduce(
-      (acc, t) =>
-        acc +
-        (isOutgoing(this.client.appAgentClient.myPubKey, t.entry)
-          ? -t.entry.amount
-          : t.entry.amount),
-      0
+  myTransactions = this.transactionsForAgent.get(
+    this.client.appAgentClient.myPubKey
+  );
+
+  balanceForAgent = new LazyHoloHashMap((agent: AgentPubKey) =>
+    asyncDerived(this.transactionsForAgent.get(agent), transactions =>
+      transactions.reduce(
+        (acc, t) =>
+          acc + (isOutgoing(agent, t.entry) ? -t.entry.amount : t.entry.amount),
+        0
+      )
     )
   );
+
+  myBalance = this.balanceForAgent.get(this.client.appAgentClient.myPubKey);
 }

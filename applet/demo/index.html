@@ -55,7 +55,9 @@
             client,
             weServicesMock
           )
-        ).main(document.getElementById('content'));
+        ).blocks['credits_in_circulation'].view(
+          document.getElementById('content')
+        );
       }
 
       async function setupCrossAppletMain() {
@@ -73,7 +75,7 @@
           document.body
         );
       }
-      setupCrossAppletMain();
+      setupAppletMain();
     </script>
   </body>
 </html>

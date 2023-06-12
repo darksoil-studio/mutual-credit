@@ -9,6 +9,7 @@ import {
   TransactionsClient,
 } from '@darksoil/mutual-credit-transactions';
 import '@darksoil/mutual-credit-transactions/dist/elements/transactions-context.js';
+import '@darksoil/mutual-credit-transactions/dist/elements/credits-in-circulation.js';
 
 import { AppAgentClient, EntryHash } from '@holochain/client';
 import { html, render, TemplateResult } from 'lit';
@@ -26,6 +27,9 @@ import { ProfilesClient, ProfilesStore } from '@holochain-open-dev/profiles';
 
 import './applet-main.js';
 import './cross-applet-main.js';
+import { mdiCurrencySign } from '@mdi/js';
+import { wrapPathInSvgWithoutPrefix } from '@holochain-open-dev/elements';
+import { msg } from '@lit/localize';
 
 function wrapAppletView(
   client: AppAgentClient,
@@ -67,7 +71,23 @@ async function appletViews(
         ),
         element
       ),
-    blocks: {},
+    blocks: {
+      credits_in_circulation: {
+        label: msg('Credits in circulation'),
+        icon_src: wrapPathInSvgWithoutPrefix(mdiCurrencySign),
+        view(element, context) {
+          render(
+            wrapAppletView(
+              client,
+              profilesClient,
+              weServices,
+              html`<credits-in-circulation></credits-in-circulation>`
+            ),
+            element
+          );
+        },
+      },
+    },
     entries: {
       transaction_requests_integrity: {},
       transactions_integrity: {},
