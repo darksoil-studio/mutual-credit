@@ -74,7 +74,6 @@ export class TransactionRequestDetail extends LitElement {
       );
     } catch (e) {
       notifyError(msg('Error accepting the transaction request'));
-      console.log((e as any).data.data);
       console.error(e);
     }
     this._accepting = false;
