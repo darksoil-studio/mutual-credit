@@ -234,7 +234,6 @@ export class PendingTransactionRequests extends LitElement {
       case 'error':
         return html`
           <display-error
-            tooltip
             .headline=${msg('Error fetching the pending transaction requests')}
             .error=${this.myPendingTransactionRequests.value.error.data.data}
           ></display-error>
