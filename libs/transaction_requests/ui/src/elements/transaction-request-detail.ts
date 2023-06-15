@@ -57,6 +57,7 @@ export class TransactionRequestDetail extends LitElement {
   /** Actions */
 
   async acceptTransactionRequest() {
+    if (this._rejecting || this._accepting) return;
     this._accepting = true;
 
     try {
@@ -80,6 +81,8 @@ export class TransactionRequestDetail extends LitElement {
   }
 
   async cancelTransactionRequest() {
+    if (this._cancelling) return;
+
     this._cancelling = true;
 
     try {
@@ -102,6 +105,7 @@ export class TransactionRequestDetail extends LitElement {
   }
 
   async rejectTransactionRequest() {
+    if (this._rejecting || this._accepting) return;
     this._rejecting = true;
 
     try {
@@ -136,19 +140,26 @@ export class TransactionRequestDetail extends LitElement {
       this.transactionRequestsStore.client.appAgentClient.myPubKey.toString()
     )
       return html`
-        <sl-button @click=${() => this.cancelTransactionRequest()}>
-          ${msg('Cancel')}
+        <sl-button
+          @click=${() => this.cancelTransactionRequest()}
+          .loading="${this._cancelling}"
+        >
+          ${msg('Cancel Request')}
         </sl-button>
         <sl-button variant="primary" disabled style="margin-left: 16px">
           ${msg('Waiting for approval')}
         </sl-button>
       `;
     return html`
-      <sl-button @click=${() => this.rejectTransactionRequest()}>
+      <sl-button
+        @click=${() => this.rejectTransactionRequest()}
+        .loading="${this._rejecting}"
+      >
         ${msg('Reject')}
       </sl-button>
       <sl-button
         style="margin-left: 16px"
+        .loading="${this._accepting}"
         variant="primary"
         @click=${() => this.acceptTransactionRequest()}
       >
